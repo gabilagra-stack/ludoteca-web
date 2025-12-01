@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { crearReserva } from "../api/reservas.api";
+import { useAuthStore } from "../auth/auth.store";
 
 export default function Reservar(){
   const [mesaId, setMesaId] = useState<number>(1);
   const [turnoDiaId, setTurnoDiaId] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{type:"error"|"success"; text:string}|null>(null);
+  const user = useAuthStore(s => s.user);
 
   async function submit(e: React.FormEvent){
     e.preventDefault();
@@ -16,7 +18,7 @@ export default function Reservar(){
     }
     setLoading(true);
     try{
-      const res = await crearReserva({ mesaId, turnoDiaId });
+      const res = await crearReserva({ mesaId, turnoDiaId, usuarioId: user?.id });
       setMsg({type:"success", text:`Reserva #${res.id} creada (${res.estado}).`});
     }catch(e:any){
       setMsg({type:"error", text: e?.response?.data?.message ?? "Error creando reserva"});

@@ -3,24 +3,26 @@ import { api } from "./axios";
 export type JuegoParaJugarResponseDto = {
   id: number;
   nombre: string;
-  categoria?: string;
-  dificultad?: string;
-  jugadoresMin?: number;
-  jugadoresMax?: number;
-  duracionMinutos?: number;
   descripcion?: string;
+  cantidadDisponible?: number;
+  imagenUrl?: string;
+  numeroMaximo?: number;
+  dificultad?: string;
+  categoria?: string;
+  duracionAproximada?: string;
 };
 
 export type JuegoParaVenderResponseDto = {
   id: number;
   nombre: string;
-  categoria?: string;
-  dificultad?: string;
-  jugadoresMin?: number;
-  jugadoresMax?: number;
+  descripcion?: string;
   precio?: number;
   stock?: number;
-  descripcion?: string;
+  imagenUrl?: string;
+  numeroMaximo?: number;
+  dificultad?: string;
+  categoria?: string;
+  duracionAproximada?: string;
 };
 
 export type JuegosQuery = {
