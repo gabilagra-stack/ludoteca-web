@@ -7,6 +7,8 @@ import Login from "./pages/Login";
 import Reservar from "./pages/Reservar";
 import MisReservas from "./pages/MisReservas";
 import AdminPanel from "./pages/AdminPanel";
+import JuegosParaJugar from "./pages/JuegosParaJugar";
+import JuegosParaComprar from "./pages/JuegosParaComprar";
 import { PrivateRoute, RoleRoute } from "./auth/AuthGuard";
 import "./styles.css"; // << importa los estilos
 
@@ -17,6 +19,8 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: "login", element: <Login /> },
+      { path: "juegos-para-jugar", element: <JuegosParaJugar /> },
+      { path: "juegos-para-comprar", element: <JuegosParaComprar /> },
       { path: "reservar", element: <PrivateRoute><Reservar /></PrivateRoute> },
       { path: "mis-reservas", element: <PrivateRoute><MisReservas /></PrivateRoute> },
       { path: "admin", element:
