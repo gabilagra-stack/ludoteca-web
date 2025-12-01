@@ -41,11 +41,8 @@ export default function JuegosParaComprar() {
               <strong>{juego.nombre}</strong>
               <div className="hint">
                 {juego.categoria ?? "Sin categoria"} • {juego.dificultad ?? "Nivel libre"}
-                {juego.jugadoresMin && juego.jugadoresMax
-                  ? ` • ${juego.jugadoresMin}-${juego.jugadoresMax} jugadores`
-                  : juego.jugadoresMax
-                  ? ` • Hasta ${juego.jugadoresMax} jugadores`
-                  : ""}
+                {juego.numeroMaximo ? ` • Hasta ${juego.numeroMaximo} jugadores` : ""}
+                {juego.duracionAproximada ? ` • ${juego.duracionAproximada}` : ""}
               </div>
               {juego.descripcion && <div className="hint">{juego.descripcion}</div>}
             </div>

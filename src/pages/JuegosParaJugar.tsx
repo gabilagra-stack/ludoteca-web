@@ -41,16 +41,14 @@ export default function JuegosParaJugar() {
               <strong>{juego.nombre}</strong>
               <div className="hint">
                 {juego.categoria ?? "Sin categoria"} • {juego.dificultad ?? "Nivel libre"}
-                {juego.jugadoresMin && juego.jugadoresMax
-                  ? ` • ${juego.jugadoresMin}-${juego.jugadoresMax} jugadores`
-                  : juego.jugadoresMax
-                  ? ` • Hasta ${juego.jugadoresMax} jugadores`
-                  : ""}
-                {juego.duracionMinutos ? ` • ${juego.duracionMinutos} min` : ""}
+                {juego.numeroMaximo ? ` • Hasta ${juego.numeroMaximo} jugadores` : ""}
+                {juego.duracionAproximada ? ` • ${juego.duracionAproximada}` : ""}
               </div>
               {juego.descripcion && <div className="hint">{juego.descripcion}</div>}
             </div>
-            <span className="badge" style={{ borderColor: "#1e2a46" }}>En sala</span>
+            <span className="badge" style={{ borderColor: "#1e2a46" }}>
+              {juego.cantidadDisponible != null ? `Disponibles: ${juego.cantidadDisponible}` : "En sala"}
+            </span>
           </div>
         ))}
       </div>
