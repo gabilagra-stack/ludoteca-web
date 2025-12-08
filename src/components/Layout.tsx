@@ -14,8 +14,12 @@ export default function Layout() {
           <NavLink to="/" className={({ isActive }) => (isActive ? "active" : "")}>Inicio</NavLink>
           <NavLink to="/juegos-para-jugar" className={({ isActive }) => (isActive ? "active" : "")}>Juegos para jugar</NavLink>
           <NavLink to="/juegos-para-comprar" className={({ isActive }) => (isActive ? "active" : "")}>Juegos para comprar</NavLink>
-          <NavLink to="/reservar" className={({ isActive }) => (isActive ? "active" : "")}>Reservar</NavLink>
-          <NavLink to="/mis-reservas" className={({ isActive }) => (isActive ? "active" : "")}>Mis reservas</NavLink>
+          {user && (
+            <>
+              <NavLink to="/reservar" className={({ isActive }) => (isActive ? "active" : "")}>Reservar</NavLink>
+              <NavLink to="/mis-reservas" className={({ isActive }) => (isActive ? "active" : "")}>Mis reservas</NavLink>
+            </>
+          )}
           {user?.roles?.includes("ADMIN") && (
             <NavLink to="/admin" className={({ isActive }) => (isActive ? "active" : "")}>Admin</NavLink>
           )}

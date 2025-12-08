@@ -67,28 +67,22 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="card" style={{ gridColumn: "span 2" }}>
-        <h2>Reservas (requiere inicio de sesion)</h2>
-        <p className="sub">
-          Agenda turnos, cancela reservas y administra tus mesas. Necesitas estar logueado.
-        </p>
-        <div className="row" style={{ gap: 12, flexWrap: "wrap" }}>
-          {user ? (
-            <>
-              <Link to="/reservar" className="btn primary">
-                Nueva reserva
-              </Link>
-              <Link to="/mis-reservas" className="btn ghost">
-                Ver mis reservas
-              </Link>
-            </>
-          ) : (
-            <Link to="/login" className="btn primary">
-              Iniciar sesion
+      {user && (
+        <section className="card" style={{ gridColumn: "span 2" }}>
+          <h2>Reservas (solo con inicio de sesion)</h2>
+          <p className="sub">
+            Agenda turnos, cancela reservas y administra tus mesas. Necesitas estar logueado.
+          </p>
+          <div className="row" style={{ gap: 12, flexWrap: "wrap" }}>
+            <Link to="/reservar" className="btn primary">
+              Nueva reserva
             </Link>
-          )}
-        </div>
-      </section>
+            <Link to="/mis-reservas" className="btn ghost">
+              Ver mis reservas
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
