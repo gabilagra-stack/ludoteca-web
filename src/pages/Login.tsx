@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { Checkbox } from "../components/ui/Checkbox";
@@ -13,13 +13,21 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const setAuth = useAuthStore((s) => s.login);
+
+  useEffect(() => {
+    const message = (location.state as any)?.message;
+    if (message) setInfo(message);
+  }, [location.state]);
 
   async function handleLogin(e?: React.FormEvent) {
     e?.preventDefault();
     setError(null);
+    setInfo(null);
     setLoading(true);
     try {
       const { token, user } = await loginApi(email, password);
@@ -80,20 +88,31 @@ export default function LoginPage() {
               <span className="text-white/60">Olvide la clave?</span>
             </div>
 
-            {error && (
-              <div className="text-center text-sm text-white bg-red-500/70 rounded-md py-2 px-3">
-                {error}
-              </div>
-            )}
+          {error && (
+            <div className="text-center text-sm text-white bg-red-500/70 rounded-md py-2 px-3">
+              {error}
+            </div>
+          )}
+          {info && !error && (
+            <div className="text-center text-sm text-white bg-green-600/70 rounded-md py-2 px-3">
+              {info}
+            </div>
+          )}
 
-            <Button
-              className="w-full mt-2 bg-white/20 text-white border border-white/40 hover:bg-white/30 disabled:opacity-60"
-              type="submit"
-              disabled={loading}
+          <Button
+            className="w-full mt-2 bg-white/20 text-white border border-white/40 hover:bg-white/30 disabled:opacity-60"
+            type="submit"
+            disabled={loading}
             >
               {loading ? "Ingresando..." : "Iniciar Sesion"}
             </Button>
           </form>
+          <p className="text-sm text-white/80">
+            ¿Aún no tienes cuenta?{" "}
+            <Link to="/registro" className="font-semibold text-white underline">
+              Crear usuario
+            </Link>
+          </p>
         </div>
       </div>
     </div>

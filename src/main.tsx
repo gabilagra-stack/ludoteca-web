@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Reservar from "./pages/Reservar";
 import MisReservas from "./pages/MisReservas";
 import AdminPanel from "./pages/AdminPanel";
@@ -19,6 +20,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: "login", element: <Login /> },
+      { path: "registro", element: <Register /> },
       { path: "juegos-para-jugar", element: <JuegosParaJugar /> },
       { path: "juegos-para-comprar", element: <JuegosParaComprar /> },
       { path: "reservar", element: <PrivateRoute><Reservar /></PrivateRoute> },
