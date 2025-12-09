@@ -1,13 +1,1253 @@
-export default function AdminPanel(){
+import { useEffect, useState } from "react";
+import { eliminarUsuario, listarUsuarios, type Usuario } from "../api/usuarios.api";
+import { crearMesa, eliminarMesa, listarMesas, type Mesa } from "../api/mesas.api";
+import {
+  listarHorarios,
+  listarTurnosDia,
+  crearTurnoHorario,
+  crearTurnoDia,
+  eliminarTurnoHorario,
+  eliminarTurnoDia,
+  type TurnoHorario,
+  type TurnoDia,
+} from "../api/turnos.api";
+import {
+  listarJuegosParaJugar,
+  listarJuegosParaVender,
+  crearJuegoParaJugar,
+  crearJuegoParaVender,
+  eliminarJuegoParaJugar,
+  eliminarJuegoParaVender,
+  type JuegoParaJugar,
+  type JuegoParaVender,
+} from "../api/juegos.api";
+
+type FiltrosUsuarios = { nombre: string; email: string; rol: string };
+type FiltrosMesas = { numero: string; capacidad: string };
+type Vista = "menu" | "usuarios" | "mesas" | "turnos" | "juegos";
+
+export default function AdminPanel() {
+  const [vista, setVista] = useState<Vista>("menu");
+
+  // Usuarios
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [loadingUsuarios, setLoadingUsuarios] = useState(false);
+  const [errorUsuarios, setErrorUsuarios] = useState<string | null>(null);
+  const [filtrosUsuarios, setFiltrosUsuarios] = useState<FiltrosUsuarios>({ nombre: "", email: "", rol: "" });
+  const [eliminandoUsuario, setEliminandoUsuario] = useState<number | null>(null);
+
+  // Mesas
+  const [mesas, setMesas] = useState<Mesa[]>([]);
+  const [loadingMesas, setLoadingMesas] = useState(false);
+  const [errorMesas, setErrorMesas] = useState<string | null>(null);
+  const [filtrosMesas, setFiltrosMesas] = useState<FiltrosMesas>({ numero: "", capacidad: "" });
+  const [creandoMesa, setCreandoMesa] = useState(false);
+  const [nuevaMesa, setNuevaMesa] = useState<{ numero: string; capacidad: string }>({ numero: "", capacidad: "" });
+  const [eliminandoMesa, setEliminandoMesa] = useState<number | null>(null);
+
+  // Turnos
+  const [vistaTurnoTab, setVistaTurnoTab] = useState<"horarios" | "dias">("horarios");
+  const [horarios, setHorarios] = useState<TurnoHorario[]>([]);
+  const [turnosDia, setTurnosDia] = useState<TurnoDia[]>([]);
+  const [loadingTurnos, setLoadingTurnos] = useState(false);
+  const [errorTurnos, setErrorTurnos] = useState<string | null>(null);
+  const [nuevoHorario, setNuevoHorario] = useState<{ horaInicio: string; horaFin: string }>({ horaInicio: "", horaFin: "" });
+  const [nuevoTurnoDia, setNuevoTurnoDia] = useState<{ fecha: string; diaSemana: string; turnoHorarioId: string }>({
+    fecha: "",
+    diaSemana: "",
+    turnoHorarioId: "",
+  });
+  const [filtroTurnoDia, setFiltroTurnoDia] = useState<{ fecha: string; diaSemana: string }>({ fecha: "", diaSemana: "" });
+  const [eliminandoTurnoId, setEliminandoTurnoId] = useState<{ tipo: "horario" | "dia"; id: number } | null>(null);
+
+  // Juegos
+  const [vistaJuegoTab, setVistaJuegoTab] = useState<"jugar" | "vender">("jugar");
+  const [juegosJugar, setJuegosJugar] = useState<JuegoParaJugar[]>([]);
+  const [juegosVender, setJuegosVender] = useState<JuegoParaVender[]>([]);
+  const [loadingJuegos, setLoadingJuegos] = useState(false);
+  const [errorJuegos, setErrorJuegos] = useState<string | null>(null);
+  const [filtrosJugar, setFiltrosJugar] = useState<{ nombre: string; categoria: string; dificultad: string; jugadoresMax: string }>({
+    nombre: "",
+    categoria: "",
+    dificultad: "",
+    jugadoresMax: "",
+  });
+  const [filtrosVender, setFiltrosVender] = useState<{ nombre: string; categoria: string; dificultad: string; jugadoresMax: string; stock: string }>({
+    nombre: "",
+    categoria: "",
+    dificultad: "",
+    jugadoresMax: "",
+    stock: "",
+  });
+  const [nuevoJuegoJugar, setNuevoJuegoJugar] = useState({
+    nombre: "",
+    descripcion: "",
+    imagenUrl: "",
+    numeroMaximo: "",
+    dificultad: "",
+    categoria: "",
+    duracionAproximada: "",
+    cantidadDisponible: "",
+  });
+  const [nuevoJuegoVender, setNuevoJuegoVender] = useState({
+    nombre: "",
+    descripcion: "",
+    imagenUrl: "",
+    numeroMaximo: "",
+    dificultad: "",
+    categoria: "",
+    duracionAproximada: "",
+    precio: "",
+    stock: "",
+  });
+  const [eliminandoJuego, setEliminandoJuego] = useState<{ tipo: "jugar" | "vender"; id: number } | null>(null);
+
+  async function fetchUsuarios() {
+    setLoadingUsuarios(true);
+    setErrorUsuarios(null);
+    try {
+      const data = await listarUsuarios({
+        nombre: filtrosUsuarios.nombre || undefined,
+        email: filtrosUsuarios.email || undefined,
+        rol: filtrosUsuarios.rol || undefined,
+      });
+      setUsuarios(data);
+    } catch (e: any) {
+      setErrorUsuarios(e?.response?.data?.message ?? "No se pudieron cargar los usuarios");
+    } finally {
+      setLoadingUsuarios(false);
+    }
+  }
+
+  async function fetchMesas() {
+    setLoadingMesas(true);
+    setErrorMesas(null);
+    try {
+      const data = await listarMesas({
+        numero: filtrosMesas.numero ? Number(filtrosMesas.numero) : undefined,
+        capacidad: filtrosMesas.capacidad ? Number(filtrosMesas.capacidad) : undefined,
+      });
+      setMesas(data);
+    } catch (e: any) {
+      setErrorMesas(e?.response?.data?.message ?? "No se pudieron cargar las mesas");
+    } finally {
+      setLoadingMesas(false);
+    }
+  }
+
+  async function fetchTurnos() {
+    setLoadingTurnos(true);
+    setErrorTurnos(null);
+    try {
+      if (vistaTurnoTab === "horarios") {
+        const data = await listarHorarios();
+        setHorarios(data);
+      } else {
+        const data = await listarTurnosDia({
+          fecha: filtroTurnoDia.fecha || undefined,
+          diaSemana: filtroTurnoDia.diaSemana || undefined,
+        });
+        setTurnosDia(data);
+      }
+    } catch (e: any) {
+      setErrorTurnos(e?.response?.data?.message ?? "No se pudieron cargar los turnos");
+    } finally {
+      setLoadingTurnos(false);
+    }
+  }
+
+  async function fetchJuegos() {
+    setLoadingJuegos(true);
+    setErrorJuegos(null);
+    try {
+      if (vistaJuegoTab === "jugar") {
+        const data = await listarJuegosParaJugar({
+          nombre: filtrosJugar.nombre || undefined,
+          categoria: filtrosJugar.categoria || undefined,
+          dificultad: filtrosJugar.dificultad || undefined,
+          jugadoresMax: filtrosJugar.jugadoresMax ? Number(filtrosJugar.jugadoresMax) : undefined,
+        });
+        setJuegosJugar(data);
+      } else {
+        const data = await listarJuegosParaVender({
+          nombre: filtrosVender.nombre || undefined,
+          categoria: filtrosVender.categoria || undefined,
+          dificultad: filtrosVender.dificultad || undefined,
+          jugadoresMax: filtrosVender.jugadoresMax ? Number(filtrosVender.jugadoresMax) : undefined,
+          stock: filtrosVender.stock ? Number(filtrosVender.stock) : undefined,
+        });
+        setJuegosVender(data);
+      }
+    } catch (e: any) {
+      setErrorJuegos(e?.response?.data?.message ?? "No se pudieron cargar los juegos");
+    } finally {
+      setLoadingJuegos(false);
+    }
+  }
+
+  useEffect(() => {
+    if (vista === "usuarios") fetchUsuarios();
+    if (vista === "mesas") fetchMesas();
+    if (vista === "turnos") fetchTurnos();
+    if (vista === "juegos") fetchJuegos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vista]);
+
+  async function handleEliminarUsuario(id: number) {
+    const confirmar = window.confirm("Eliminar usuario? Esta accion no se puede deshacer.");
+    if (!confirmar) return;
+    setEliminandoUsuario(id);
+    try {
+      await eliminarUsuario(id);
+      setUsuarios((prev) => prev.filter((u) => u.id !== id));
+    } catch (e: any) {
+      setErrorUsuarios(e?.response?.data?.message ?? "No se pudo eliminar el usuario");
+    } finally {
+      setEliminandoUsuario(null);
+    }
+  }
+
+  async function handleCrearMesa(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorMesas(null);
+    setCreandoMesa(true);
+    try {
+      const mesaCreada = await crearMesa({
+        numero: Number(nuevaMesa.numero),
+        capacidad: Number(nuevaMesa.capacidad),
+      });
+      setNuevaMesa({ numero: "", capacidad: "" });
+      setMesas((prev) => [mesaCreada, ...prev]);
+    } catch (err: any) {
+      setErrorMesas(err?.response?.data?.message ?? "No se pudo crear la mesa");
+    } finally {
+      setCreandoMesa(false);
+    }
+  }
+
+  async function handleEliminarMesa(id: number) {
+    const confirmar = window.confirm("Eliminar mesa? Esta accion no se puede deshacer.");
+    if (!confirmar) return;
+    setEliminandoMesa(id);
+    try {
+      await eliminarMesa(id);
+      setMesas((prev) => prev.filter((m) => m.id !== id));
+    } catch (err: any) {
+      setErrorMesas(err?.response?.data?.message ?? "No se pudo eliminar la mesa");
+    } finally {
+      setEliminandoMesa(null);
+    }
+  }
+
+  async function handleCrearJuegoJugar(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorJuegos(null);
+    setLoadingJuegos(true);
+    try {
+      const creado = await crearJuegoParaJugar({
+        ...nuevoJuegoJugar,
+        numeroMaximo: Number(nuevoJuegoJugar.numeroMaximo),
+        cantidadDisponible: Number(nuevoJuegoJugar.cantidadDisponible),
+      } as unknown as Omit<JuegoParaJugar, "id">);
+      setNuevoJuegoJugar({
+        nombre: "",
+        descripcion: "",
+        imagenUrl: "",
+        numeroMaximo: "",
+        dificultad: "",
+        categoria: "",
+        duracionAproximada: "",
+        cantidadDisponible: "",
+      });
+      setJuegosJugar((prev) => [creado, ...prev]);
+      setVistaJuegoTab("jugar");
+    } catch (err: any) {
+      setErrorJuegos(err?.response?.data?.message ?? "No se pudo crear el juego");
+    } finally {
+      setLoadingJuegos(false);
+    }
+  }
+
+  async function handleCrearJuegoVender(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorJuegos(null);
+    setLoadingJuegos(true);
+    try {
+      const creado = await crearJuegoParaVender({
+        ...nuevoJuegoVender,
+        numeroMaximo: Number(nuevoJuegoVender.numeroMaximo),
+        precio: Number(nuevoJuegoVender.precio),
+        stock: Number(nuevoJuegoVender.stock),
+      } as unknown as Omit<JuegoParaVender, "id">);
+      setNuevoJuegoVender({
+        nombre: "",
+        descripcion: "",
+        imagenUrl: "",
+        numeroMaximo: "",
+        dificultad: "",
+        categoria: "",
+        duracionAproximada: "",
+        precio: "",
+        stock: "",
+      });
+      setJuegosVender((prev) => [creado, ...prev]);
+      setVistaJuegoTab("vender");
+    } catch (err: any) {
+      setErrorJuegos(err?.response?.data?.message ?? "No se pudo crear el juego");
+    } finally {
+      setLoadingJuegos(false);
+    }
+  }
+
+  async function handleEliminarJuego(tipo: "jugar" | "vender", id: number) {
+    const confirmar = window.confirm("Eliminar juego? Esta accion no se puede deshacer.");
+    if (!confirmar) return;
+    setEliminandoJuego({ tipo, id });
+    try {
+      if (tipo === "jugar") {
+        await eliminarJuegoParaJugar(id);
+        setJuegosJugar((prev) => prev.filter((j) => j.id !== id));
+      } else {
+        await eliminarJuegoParaVender(id);
+        setJuegosVender((prev) => prev.filter((j) => j.id !== id));
+      }
+    } catch (err: any) {
+      setErrorJuegos(err?.response?.data?.message ?? "No se pudo eliminar el juego");
+    } finally {
+      setEliminandoJuego(null);
+    }
+  }
+
+  async function handleCrearTurnoHorario(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorTurnos(null);
+    setLoadingTurnos(true);
+    try {
+      const nuevo = await crearTurnoHorario({ ...nuevoHorario });
+      setNuevoHorario({ horaInicio: "", horaFin: "" });
+      setHorarios((prev) => [nuevo, ...prev]);
+      setVistaTurnoTab("horarios");
+    } catch (err: any) {
+      setErrorTurnos(err?.response?.data?.message ?? "No se pudo crear el turno horario");
+    } finally {
+      setLoadingTurnos(false);
+    }
+  }
+
+  async function handleCrearTurnoDia(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorTurnos(null);
+    setLoadingTurnos(true);
+    try {
+      const nuevo = await crearTurnoDia({
+        fecha: nuevoTurnoDia.fecha,
+        diaSemana: nuevoTurnoDia.diaSemana,
+        turnoHorarioId: Number(nuevoTurnoDia.turnoHorarioId),
+      });
+      setNuevoTurnoDia({ fecha: "", diaSemana: "", turnoHorarioId: "" });
+      setTurnosDia((prev) => [nuevo, ...prev]);
+      setVistaTurnoTab("dias");
+    } catch (err: any) {
+      setErrorTurnos(err?.response?.data?.message ?? "No se pudo crear el turno dia");
+    } finally {
+      setLoadingTurnos(false);
+    }
+  }
+
+  async function handleEliminarTurno(tipo: "horario" | "dia", id: number) {
+    const confirmar = window.confirm("Eliminar? Esta accion no se puede deshacer.");
+    if (!confirmar) return;
+    setEliminandoTurnoId({ tipo, id });
+    try {
+      if (tipo === "horario") {
+        await eliminarTurnoHorario(id);
+        setHorarios((prev) => prev.filter((h) => h.id !== id));
+      } else {
+        await eliminarTurnoDia(id);
+        setTurnosDia((prev) => prev.filter((t) => t.id !== id));
+      }
+    } catch (err: any) {
+      setErrorTurnos(err?.response?.data?.message ?? "No se pudo eliminar");
+    } finally {
+      setEliminandoTurnoId(null);
+    }
+  }
+
+  if (vista === "menu") {
+    return (
+      <section className="card">
+        <h2 style={{ margin: 0 }}>Panel de administracion</h2>
+        <p className="sub" style={{ marginTop: 4 }}>Elige una seccion para gestionar.</p>
+
+        <div className="list" style={{ marginTop: 16 }}>
+          <div className="item" style={{ justifyContent: "space-between" }}>
+            <div>
+              <strong>Usuarios</strong>
+              <div className="hint">Alta, baja y filtros por rol.</div>
+            </div>
+            <button className="btn primary" onClick={() => setVista("usuarios")}>
+              Abrir
+            </button>
+          </div>
+          <div className="item" style={{ justifyContent: "space-between" }}>
+            <div>
+              <strong>Mesas</strong>
+              <div className="hint">Configurar mesas y capacidad.</div>
+            </div>
+            <button className="btn primary" onClick={() => setVista("mesas")}>
+              Abrir
+            </button>
+          </div>
+          <div className="item" style={{ justifyContent: "space-between" }}>
+            <div>
+              <strong>Turnos</strong>
+              <div className="hint">Horarios y turnos por fecha.</div>
+            </div>
+            <button className="btn primary" onClick={() => setVista("turnos")}>
+              Abrir
+            </button>
+          </div>
+          <div className="item" style={{ justifyContent: "space-between" }}>
+            <div>
+              <strong>Juegos</strong>
+              <div className="hint">Catalogo para jugar y vender.</div>
+            </div>
+            <button className="btn primary" onClick={() => setVista("juegos")}>
+              Abrir
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (vista === "usuarios") {
+    return (
+      <section className="card">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button className="btn ghost" onClick={() => setVista("menu")}>{"<"}- Volver</button>
+            <div>
+              <h2 style={{ margin: 0 }}>Usuarios</h2>
+              <p className="sub" style={{ margin: 0 }}>Acceso restringido a ADMIN.</p>
+            </div>
+          </div>
+          <button className="btn ghost" onClick={fetchUsuarios} disabled={loadingUsuarios}>
+            {loadingUsuarios ? "Actualizando..." : "Refrescar"}
+          </button>
+        </div>
+
+        <div className="row" style={{ marginTop: 16, flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <label className="label">Nombre</label>
+            <input
+              className="input"
+              placeholder="Buscar por nombre"
+              value={filtrosUsuarios.nombre}
+              onChange={(e) => setFiltrosUsuarios((f) => ({ ...f, nombre: e.target.value }))}
+            />
+          </div>
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <label className="label">Email</label>
+            <input
+              className="input"
+              placeholder="Buscar por email"
+              value={filtrosUsuarios.email}
+              onChange={(e) => setFiltrosUsuarios((f) => ({ ...f, email: e.target.value }))}
+            />
+          </div>
+          <div style={{ flex: 1, minWidth: 140 }}>
+            <label className="label">Rol</label>
+            <select
+              className="input"
+              value={filtrosUsuarios.rol}
+              onChange={(e) => setFiltrosUsuarios((f) => ({ ...f, rol: e.target.value }))}
+            >
+              <option value="">Todos</option>
+              <option value="ADMIN">ADMIN</option>
+              <option value="USER">USER</option>
+            </select>
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+            <button className="btn primary" onClick={fetchUsuarios} disabled={loadingUsuarios}>
+              {loadingUsuarios ? "Buscando..." : "Aplicar filtros"}
+            </button>
+            <button
+              className="btn ghost"
+              type="button"
+              onClick={() => {
+                setFiltrosUsuarios({ nombre: "", email: "", rol: "" });
+                setTimeout(fetchUsuarios, 0);
+              }}
+            >
+              Limpiar
+            </button>
+          </div>
+        </div>
+
+        {errorUsuarios && <div className="alert error" style={{ marginTop: 12 }}>{errorUsuarios}</div>}
+
+        <div style={{ marginTop: 16, overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                {["ID", "Nombre", "Email", "Rol", ""].map((h) => (
+                  <th key={h} style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid var(--border)", color: "var(--muted)", fontWeight: 600 }}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {usuarios.map((u) => (
+                <tr key={u.id}>
+                  <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{u.id}</td>
+                  <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{u.nombre}</td>
+                  <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{u.email}</td>
+                  <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)", fontWeight: 600 }}>{u.rol}</td>
+                  <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)", textAlign: "right" }}>
+                    <button
+                      className="btn danger"
+                      onClick={() => handleEliminarUsuario(u.id)}
+                      disabled={eliminandoUsuario === u.id}
+                    >
+                      {eliminandoUsuario === u.id ? "Eliminando..." : "Eliminar"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {!loadingUsuarios && usuarios.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ padding: "12px 8px", color: "var(--muted)" }}>
+                    Sin resultados
+                  </td>
+                </tr>
+              )}
+              {loadingUsuarios && (
+                <tr>
+                  <td colSpan={5} style={{ padding: "12px 8px", color: "var(--muted)" }}>
+                    Cargando...
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    );
+  }
+
+  if (vista === "mesas") {
+    return (
+    <section className="card">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <button className="btn ghost" onClick={() => setVista("menu")}>{"<"}- Volver</button>
+          <div>
+            <h2 style={{ margin: 0 }}>Mesas</h2>
+            <p className="sub" style={{ margin: 0 }}>Gestiona mesas y capacidad.</p>
+          </div>
+        </div>
+        <button className="btn ghost" onClick={fetchMesas} disabled={loadingMesas}>
+          {loadingMesas ? "Actualizando..." : "Refrescar"}
+        </button>
+      </div>
+
+      <form onSubmit={handleCrearMesa} className="row" style={{ marginTop: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
+        <div style={{ flex: 1, minWidth: 140 }}>
+          <label className="label">Numero</label>
+          <input
+            className="input"
+            type="number"
+            min={1}
+            placeholder="Ej: 5"
+            value={nuevaMesa.numero}
+            onChange={(e) => setNuevaMesa((m) => ({ ...m, numero: e.target.value }))}
+            required
+          />
+        </div>
+        <div style={{ flex: 1, minWidth: 140 }}>
+          <label className="label">Capacidad</label>
+          <input
+            className="input"
+            type="number"
+            min={1}
+            placeholder="Ej: 4"
+            value={nuevaMesa.capacidad}
+            onChange={(e) => setNuevaMesa((m) => ({ ...m, capacidad: e.target.value }))}
+            required
+          />
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="btn primary" type="submit" disabled={creandoMesa}>
+            {creandoMesa ? "Creando..." : "Crear mesa"}
+          </button>
+          <button
+            className="btn ghost"
+            type="button"
+            onClick={() => setNuevaMesa({ numero: "", capacidad: "" })}
+          >
+            Limpiar
+          </button>
+        </div>
+      </form>
+
+      <div className="row" style={{ marginTop: 16, flexWrap: "wrap" }}>
+        <div style={{ flex: 1, minWidth: 140 }}>
+          <label className="label">Numero</label>
+          <input
+            className="input"
+            type="number"
+            placeholder="Filtrar por numero"
+            value={filtrosMesas.numero}
+            onChange={(e) => setFiltrosMesas((f) => ({ ...f, numero: e.target.value }))}
+          />
+        </div>
+        <div style={{ flex: 1, minWidth: 140 }}>
+          <label className="label">Capacidad</label>
+          <input
+            className="input"
+            type="number"
+            placeholder="Filtrar por capacidad"
+            value={filtrosMesas.capacidad}
+            onChange={(e) => setFiltrosMesas((f) => ({ ...f, capacidad: e.target.value }))}
+          />
+        </div>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+          <button className="btn primary" type="button" onClick={fetchMesas} disabled={loadingMesas}>
+            {loadingMesas ? "Buscando..." : "Aplicar filtros"}
+          </button>
+          <button
+            className="btn ghost"
+            type="button"
+            onClick={() => {
+              setFiltrosMesas({ numero: "", capacidad: "" });
+              setTimeout(fetchMesas, 0);
+            }}
+          >
+            Limpiar
+          </button>
+        </div>
+      </div>
+
+      {errorMesas && <div className="alert error" style={{ marginTop: 12 }}>{errorMesas}</div>}
+
+      <div style={{ marginTop: 16, overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              {["ID", "Numero", "Capacidad", "Disponible", ""].map((h) => (
+                <th key={h} style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid var(--border)", color: "var(--muted)", fontWeight: 600 }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {mesas.map((m) => (
+              <tr key={m.id}>
+                <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{m.id}</td>
+                <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{m.numero}</td>
+                <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{m.capacidad}</td>
+                <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>
+                  {m.disponible ? "Si" : "No"}
+                </td>
+                <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)", textAlign: "right" }}>
+                  <button
+                    className="btn danger"
+                    onClick={() => handleEliminarMesa(m.id)}
+                    disabled={eliminandoMesa === m.id}
+                  >
+                    {eliminandoMesa === m.id ? "Eliminando..." : "Eliminar"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {!loadingMesas && mesas.length === 0 && (
+              <tr>
+                <td colSpan={5} style={{ padding: "12px 8px", color: "var(--muted)" }}>
+                  Sin resultados
+                </td>
+              </tr>
+            )}
+            {loadingMesas && (
+              <tr>
+                <td colSpan={5} style={{ padding: "12px 8px", color: "var(--muted)" }}>
+                  Cargando...
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    );
+  }
+
+  if (vista === "juegos") {
+    return (
+      <section className="card">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button className="btn ghost" onClick={() => setVista("menu")}>{"<"}- Volver</button>
+            <div>
+              <h2 style={{ margin: 0 }}>Juegos</h2>
+              <p className="sub" style={{ margin: 0 }}>Catalogo para jugar o vender.</p>
+            </div>
+          </div>
+          <button className="btn ghost" onClick={fetchJuegos} disabled={loadingJuegos}>
+            {loadingJuegos ? "Actualizando..." : "Refrescar"}
+          </button>
+        </div>
+
+        <div className="row" style={{ gap: 10, marginTop: 16, flexWrap: "wrap", borderBottom: "1px solid var(--border)", paddingBottom: 12 }}>
+          <button
+            className={`btn ${vistaJuegoTab === "jugar" ? "primary" : "ghost"}`}
+            type="button"
+            onClick={() => {
+              setVistaJuegoTab("jugar");
+              fetchJuegos();
+            }}
+          >
+            Para jugar
+          </button>
+          <button
+            className={`btn ${vistaJuegoTab === "vender" ? "primary" : "ghost"}`}
+            type="button"
+            onClick={() => {
+              setVistaJuegoTab("vender");
+              fetchJuegos();
+            }}
+          >
+            Para vender
+          </button>
+        </div>
+
+        {vistaJuegoTab === "jugar" ? (
+          <>
+            <div className="card" style={{ background: "rgba(17,26,46,.6)", border: "1px solid var(--border)", marginTop: 16, boxShadow: "0 10px 30px rgba(0,0,0,.25)" }}>
+              <form onSubmit={handleCrearJuegoJugar} className="row" style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
+                <div style={{ flex: 1, minWidth: 180 }}>
+                  <label className="label">Nombre</label>
+                  <input className="input" value={nuevoJuegoJugar.nombre} onChange={(e) => setNuevoJuegoJugar((v) => ({ ...v, nombre: e.target.value }))} required />
+                </div>
+                <div style={{ flex: 1, minWidth: 180 }}>
+                  <label className="label">Categoria</label>
+                  <select className="input" value={nuevoJuegoJugar.categoria} onChange={(e) => setNuevoJuegoJugar((v) => ({ ...v, categoria: e.target.value }))}>
+                    <option value="">Seleccionar</option>
+                    {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1, minWidth: 140 }}>
+                  <label className="label">Dificultad</label>
+                  <select className="input" value={nuevoJuegoJugar.dificultad} onChange={(e) => setNuevoJuegoJugar((v) => ({ ...v, dificultad: e.target.value }))}>
+                    <option value="">Seleccionar</option>
+                    {dificultades.map((d) => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1, minWidth: 140 }}>
+                  <label className="label">Max jugadores</label>
+                  <input className="input" type="number" min={1} value={nuevoJuegoJugar.numeroMaximo} onChange={(e) => setNuevoJuegoJugar((v) => ({ ...v, numeroMaximo: e.target.value }))} />
+                </div>
+                <div style={{ flex: 1, minWidth: 140 }}>
+                  <label className="label">Disponibles</label>
+                  <input className="input" type="number" min={0} value={nuevoJuegoJugar.cantidadDisponible} onChange={(e) => setNuevoJuegoJugar((v) => ({ ...v, cantidadDisponible: e.target.value }))} />
+                </div>
+                <div style={{ flex: 1, minWidth: 180 }}>
+                  <label className="label">Duración</label>
+                  <input className="input" placeholder="Ej: 60-90 min" value={nuevoJuegoJugar.duracionAproximada} onChange={(e) => setNuevoJuegoJugar((v) => ({ ...v, duracionAproximada: e.target.value }))} />
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button className="btn primary" type="submit" disabled={loadingJuegos}>{loadingJuegos ? "Creando..." : "Crear juego"}</button>
+                  <button className="btn ghost" type="button" onClick={() => setNuevoJuegoJugar({
+                    nombre: "",
+                    descripcion: "",
+                    imagenUrl: "",
+                    numeroMaximo: "",
+                    dificultad: "",
+                    categoria: "",
+                    duracionAproximada: "",
+                    cantidadDisponible: "",
+                  })}>Limpiar</button>
+                </div>
+              </form>
+            </div>
+
+            <div className="row" style={{ marginTop: 16, flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <label className="label">Nombre</label>
+                <input className="input" value={filtrosJugar.nombre} onChange={(e) => setFiltrosJugar((f) => ({ ...f, nombre: e.target.value }))} />
+              </div>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <label className="label">Categoria</label>
+                <select className="input" value={filtrosJugar.categoria} onChange={(e) => setFiltrosJugar((f) => ({ ...f, categoria: e.target.value }))}>
+                  <option value="">Todas</option>
+                  {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1, minWidth: 140 }}>
+                <label className="label">Dificultad</label>
+                <select className="input" value={filtrosJugar.dificultad} onChange={(e) => setFiltrosJugar((f) => ({ ...f, dificultad: e.target.value }))}>
+                  <option value="">Todas</option>
+                  {dificultades.map((d) => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1, minWidth: 140 }}>
+                <label className="label">Jugadores max</label>
+                <input className="input" type="number" min={1} value={filtrosJugar.jugadoresMax} onChange={(e) => setFiltrosJugar((f) => ({ ...f, jugadoresMax: e.target.value }))} />
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+                <button className="btn primary" type="button" onClick={fetchJuegos} disabled={loadingJuegos}>
+                  {loadingJuegos ? "Buscando..." : "Aplicar filtros"}
+                </button>
+                <button className="btn ghost" type="button" onClick={() => { setFiltrosJugar({ nombre: "", categoria: "", dificultad: "", jugadoresMax: "" }); setTimeout(fetchJuegos, 0); }}>
+                  Limpiar
+                </button>
+              </div>
+            </div>
+
+            {errorJuegos && <div className="alert error" style={{ marginTop: 12 }}>{errorJuegos}</div>}
+
+            <div className="card" style={{ marginTop: 12, background: "rgba(17,26,46,.6)", border: "1px solid var(--border)", boxShadow: "0 10px 30px rgba(0,0,0,.25)" }}>
+              <div className="list">
+                {juegosJugar.map((j) => (
+                  <div key={j.id} className="item" style={{ justifyContent: "space-between" }}>
+                    <div>
+                      <strong>{j.nombre}</strong>
+                      <div className="hint">
+                        {j.categoria || "Sin categoria"} · {j.dificultad || "Sin dificultad"} · Max {j.numeroMaximo || "-"} · {j.duracionAproximada || "Duración no indicada"}
+                      </div>
+                      <div className="hint">Disponibles: {j.cantidadDisponible ?? "-"}</div>
+                    </div>
+                    <button className="btn danger" onClick={() => handleEliminarJuego("jugar", j.id)} disabled={eliminandoJuego?.tipo === "jugar" && eliminandoJuego.id === j.id}>
+                      {eliminandoJuego?.tipo === "jugar" && eliminandoJuego.id === j.id ? "Eliminando..." : "Eliminar"}
+                    </button>
+                  </div>
+                ))}
+                {!loadingJuegos && juegosJugar.length === 0 && (
+                  <div className="item"><span className="hint">Sin juegos cargados</span></div>
+                )}
+                {loadingJuegos && (
+                  <div className="item"><span className="hint">Cargando...</span></div>
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="card" style={{ background: "rgba(17,26,46,.6)", border: "1px solid var(--border)", marginTop: 16, boxShadow: "0 10px 30px rgba(0,0,0,.25)" }}>
+              <form onSubmit={handleCrearJuegoVender} className="row" style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
+                <div style={{ flex: 1, minWidth: 180 }}>
+                  <label className="label">Nombre</label>
+                  <input className="input" value={nuevoJuegoVender.nombre} onChange={(e) => setNuevoJuegoVender((v) => ({ ...v, nombre: e.target.value }))} required />
+                </div>
+                <div style={{ flex: 1, minWidth: 180 }}>
+                  <label className="label">Categoria</label>
+                  <select className="input" value={nuevoJuegoVender.categoria} onChange={(e) => setNuevoJuegoVender((v) => ({ ...v, categoria: e.target.value }))}>
+                    <option value="">Seleccionar</option>
+                    {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1, minWidth: 140 }}>
+                  <label className="label">Dificultad</label>
+                  <select className="input" value={nuevoJuegoVender.dificultad} onChange={(e) => setNuevoJuegoVender((v) => ({ ...v, dificultad: e.target.value }))}>
+                    <option value="">Seleccionar</option>
+                    {dificultades.map((d) => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1, minWidth: 140 }}>
+                  <label className="label">Max jugadores</label>
+                  <input className="input" type="number" min={1} value={nuevoJuegoVender.numeroMaximo} onChange={(e) => setNuevoJuegoVender((v) => ({ ...v, numeroMaximo: e.target.value }))} />
+                </div>
+                <div style={{ flex: 1, minWidth: 140 }}>
+                  <label className="label">Stock</label>
+                  <input className="input" type="number" min={0} value={nuevoJuegoVender.stock} onChange={(e) => setNuevoJuegoVender((v) => ({ ...v, stock: e.target.value }))} />
+                </div>
+                <div style={{ flex: 1, minWidth: 140 }}>
+                  <label className="label">Precio</label>
+                  <input className="input" type="number" min={0} step="0.01" value={nuevoJuegoVender.precio} onChange={(e) => setNuevoJuegoVender((v) => ({ ...v, precio: e.target.value }))} />
+                </div>
+                <div style={{ flex: 1, minWidth: 180 }}>
+                  <label className="label">Duración</label>
+                  <input className="input" placeholder="Ej: 60-90 min" value={nuevoJuegoVender.duracionAproximada} onChange={(e) => setNuevoJuegoVender((v) => ({ ...v, duracionAproximada: e.target.value }))} />
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button className="btn primary" type="submit" disabled={loadingJuegos}>{loadingJuegos ? "Creando..." : "Crear juego"}</button>
+                  <button className="btn ghost" type="button" onClick={() => setNuevoJuegoVender({
+                    nombre: "",
+                    descripcion: "",
+                    imagenUrl: "",
+                    numeroMaximo: "",
+                    dificultad: "",
+                    categoria: "",
+                    duracionAproximada: "",
+                    precio: "",
+                    stock: "",
+                  })}>Limpiar</button>
+                </div>
+              </form>
+            </div>
+
+            <div className="row" style={{ marginTop: 16, flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <label className="label">Nombre</label>
+                <input className="input" value={filtrosVender.nombre} onChange={(e) => setFiltrosVender((f) => ({ ...f, nombre: e.target.value }))} />
+              </div>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <label className="label">Categoria</label>
+                <select className="input" value={filtrosVender.categoria} onChange={(e) => setFiltrosVender((f) => ({ ...f, categoria: e.target.value }))}>
+                  <option value="">Todas</option>
+                  {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1, minWidth: 140 }}>
+                <label className="label">Dificultad</label>
+                <select className="input" value={filtrosVender.dificultad} onChange={(e) => setFiltrosVender((f) => ({ ...f, dificultad: e.target.value }))}>
+                  <option value="">Todas</option>
+                  {dificultades.map((d) => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1, minWidth: 140 }}>
+                <label className="label">Jugadores max</label>
+                <input className="input" type="number" min={1} value={filtrosVender.jugadoresMax} onChange={(e) => setFiltrosVender((f) => ({ ...f, jugadoresMax: e.target.value }))} />
+              </div>
+              <div style={{ flex: 1, minWidth: 140 }}>
+                <label className="label">Stock minimo</label>
+                <input className="input" type="number" min={0} value={filtrosVender.stock} onChange={(e) => setFiltrosVender((f) => ({ ...f, stock: e.target.value }))} />
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+                <button className="btn primary" type="button" onClick={fetchJuegos} disabled={loadingJuegos}>
+                  {loadingJuegos ? "Buscando..." : "Aplicar filtros"}
+                </button>
+                <button className="btn ghost" type="button" onClick={() => { setFiltrosVender({ nombre: "", categoria: "", dificultad: "", jugadoresMax: "", stock: "" }); setTimeout(fetchJuegos, 0); }}>
+                  Limpiar
+                </button>
+              </div>
+            </div>
+
+            {errorJuegos && <div className="alert error" style={{ marginTop: 12 }}>{errorJuegos}</div>}
+
+            <div className="card" style={{ marginTop: 12, background: "rgba(17,26,46,.6)", border: "1px solid var(--border)", boxShadow: "0 10px 30px rgba(0,0,0,.25)" }}>
+              <div className="list">
+                {juegosVender.map((j) => (
+                  <div key={j.id} className="item" style={{ justifyContent: "space-between" }}>
+                    <div>
+                      <strong>{j.nombre}</strong>
+                      <div className="hint">
+                        {j.categoria || "Sin categoria"} · {j.dificultad || "Sin dificultad"} · Max {j.numeroMaximo || "-"} · {j.duracionAproximada || "Duración no indicada"}
+                      </div>
+                      <div className="hint">Precio: {j.precio ?? "-"} · Stock: {j.stock ?? "-"}</div>
+                    </div>
+                    <button className="btn danger" onClick={() => handleEliminarJuego("vender", j.id)} disabled={eliminandoJuego?.tipo === "vender" && eliminandoJuego.id === j.id}>
+                      {eliminandoJuego?.tipo === "vender" && eliminandoJuego.id === j.id ? "Eliminando..." : "Eliminar"}
+                    </button>
+                  </div>
+                ))}
+                {!loadingJuegos && juegosVender.length === 0 && (
+                  <div className="item"><span className="hint">Sin juegos cargados</span></div>
+                )}
+                {loadingJuegos && (
+                  <div className="item"><span className="hint">Cargando...</span></div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </section>
+    );
+  }
+
+  // Vista turnos
   return (
     <section className="card">
-      <h2>Panel de administración</h2>
-      <p className="sub">Acceso restringido a rol ADMIN.</p>
-      <ul className="list">
-        <li className="item">Próximamente: ABM Mesas</li>
-        <li className="item">Próximamente: ABM Turnos</li>
-        <li className="item">Próximamente: Juegos (para jugar / vender)</li>
-      </ul>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <button className="btn ghost" onClick={() => setVista("menu")}>{"<"}- Volver</button>
+          <div>
+            <h2 style={{ margin: 0 }}>Turnos</h2>
+            <p className="sub" style={{ margin: 0 }}>Gestiona horarios base y turnos por dia.</p>
+          </div>
+        </div>
+        <button className="btn ghost" onClick={fetchTurnos} disabled={loadingTurnos}>
+          {loadingTurnos ? "Actualizando..." : "Refrescar"}
+        </button>
+      </div>
+
+      <div className="row" style={{ gap: 10, marginTop: 16, flexWrap: "wrap" }}>
+        <button
+          className={`btn ${vistaTurnoTab === "horarios" ? "primary" : "ghost"}`}
+          type="button"
+          onClick={() => {
+            setVistaTurnoTab("horarios");
+            fetchTurnos();
+          }}
+        >
+          Horarios base
+        </button>
+        <button
+          className={`btn ${vistaTurnoTab === "dias" ? "primary" : "ghost"}`}
+          type="button"
+          onClick={() => {
+            setVistaTurnoTab("dias");
+            fetchTurnos();
+          }}
+        >
+          Turnos por dia
+        </button>
+      </div>
+
+      {vistaTurnoTab === "horarios" ? (
+        <>
+          <form onSubmit={handleCrearTurnoHorario} className="row" style={{ marginTop: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <label className="label">Hora inicio (HH:mm)</label>
+              <input
+                className="input"
+                type="time"
+                value={nuevoHorario.horaInicio}
+                onChange={(e) => setNuevoHorario((h) => ({ ...h, horaInicio: e.target.value }))}
+                required
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <label className="label">Hora fin (HH:mm)</label>
+              <input
+                className="input"
+                type="time"
+                value={nuevoHorario.horaFin}
+                onChange={(e) => setNuevoHorario((h) => ({ ...h, horaFin: e.target.value }))}
+                required
+              />
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn primary" type="submit" disabled={loadingTurnos}>
+                {loadingTurnos ? "Creando..." : "Crear horario"}
+              </button>
+              <button
+                className="btn ghost"
+                type="button"
+                onClick={() => setNuevoHorario({ horaInicio: "", horaFin: "" })}
+              >
+                Limpiar
+              </button>
+            </div>
+          </form>
+
+          {errorTurnos && <div className="alert error" style={{ marginTop: 12 }}>{errorTurnos}</div>}
+
+          <div style={{ marginTop: 16, overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  {["ID", "Inicio", "Fin", ""].map((h) => (
+                    <th key={h} style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid var(--border)", color: "var(--muted)", fontWeight: 600 }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {horarios.map((h) => (
+                  <tr key={h.id}>
+                    <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{h.id}</td>
+                    <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{h.horaInicio}</td>
+                    <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{h.horaFin}</td>
+                    <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)", textAlign: "right" }}>
+                      <button
+                        className="btn danger"
+                        onClick={() => handleEliminarTurno("horario", h.id)}
+                        disabled={eliminandoTurnoId?.tipo === "horario" && eliminandoTurnoId.id === h.id}
+                      >
+                        {eliminandoTurnoId?.tipo === "horario" && eliminandoTurnoId.id === h.id ? "Eliminando..." : "Eliminar"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {!loadingTurnos && horarios.length === 0 && (
+                  <tr>
+                    <td colSpan={4} style={{ padding: "12px 8px", color: "var(--muted)" }}>
+                      Sin horarios cargados
+                    </td>
+                  </tr>
+                )}
+                {loadingTurnos && (
+                  <tr>
+                    <td colSpan={4} style={{ padding: "12px 8px", color: "var(--muted)" }}>
+                      Cargando...
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : (
+        <>
+          <form onSubmit={handleCrearTurnoDia} className="row" style={{ marginTop: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <label className="label">Fecha</label>
+              <input
+                className="input"
+                type="date"
+                value={nuevoTurnoDia.fecha}
+                onChange={(e) => setNuevoTurnoDia((t) => ({ ...t, fecha: e.target.value }))}
+                required
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <label className="label">Dia de semana</label>
+              <select
+                className="input"
+                value={nuevoTurnoDia.diaSemana}
+                onChange={(e) => setNuevoTurnoDia((t) => ({ ...t, diaSemana: e.target.value }))}
+                required
+              >
+                <option value="">Seleccionar</option>
+                {["LUNES","MARTES","MIERCOLES","JUEVES","VIERNES","SABADO","DOMINGO"].map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <label className="label">Turno horario</label>
+              <select
+                className="input"
+                value={nuevoTurnoDia.turnoHorarioId}
+                onChange={(e) => setNuevoTurnoDia((t) => ({ ...t, turnoHorarioId: e.target.value }))}
+                required
+              >
+                <option value="">Seleccionar</option>
+                {horarios.map((h) => (
+                  <option key={h.id} value={h.id}>
+                    {h.horaInicio} - {h.horaFin}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn primary" type="submit" disabled={loadingTurnos}>
+                {loadingTurnos ? "Creando..." : "Crear turno dia"}
+              </button>
+              <button
+                className="btn ghost"
+                type="button"
+                onClick={() => setNuevoTurnoDia({ fecha: "", diaSemana: "", turnoHorarioId: "" })}
+              >
+                Limpiar
+              </button>
+            </div>
+          </form>
+
+          <div className="row" style={{ marginTop: 16, flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <label className="label">Fecha</label>
+              <input
+                className="input"
+                type="date"
+                value={filtroTurnoDia.fecha}
+                onChange={(e) => setFiltroTurnoDia((f) => ({ ...f, fecha: e.target.value }))}
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <label className="label">Dia semana</label>
+              <select
+                className="input"
+                value={filtroTurnoDia.diaSemana}
+                onChange={(e) => setFiltroTurnoDia((f) => ({ ...f, diaSemana: e.target.value }))}
+              >
+                <option value="">Todos</option>
+                {["LUNES","MARTES","MIERCOLES","JUEVES","VIERNES","SABADO","DOMINGO"].map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+              <button className="btn primary" type="button" onClick={fetchTurnos} disabled={loadingTurnos}>
+                {loadingTurnos ? "Buscando..." : "Aplicar filtros"}
+              </button>
+              <button
+                className="btn ghost"
+                type="button"
+                onClick={() => {
+                  setFiltroTurnoDia({ fecha: "", diaSemana: "" });
+                  setTimeout(fetchTurnos, 0);
+                }}
+              >
+                Limpiar
+              </button>
+            </div>
+          </div>
+
+          {errorTurnos && <div className="alert error" style={{ marginTop: 12 }}>{errorTurnos}</div>}
+
+          <div style={{ marginTop: 16, overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  {["ID", "Fecha", "Dia", "Horario", ""].map((h) => (
+                    <th key={h} style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid var(--border)", color: "var(--muted)", fontWeight: 600 }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {turnosDia.map((t) => (
+                  <tr key={t.id}>
+                    <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{t.id}</td>
+                    <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{t.fecha}</td>
+                    <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{t.diaSemana}</td>
+                    <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>
+                      {t.horaInicio} - {t.horaFin}
+                    </td>
+                    <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)", textAlign: "right" }}>
+                      <button
+                        className="btn danger"
+                        onClick={() => handleEliminarTurno("dia", t.id)}
+                        disabled={eliminandoTurnoId?.tipo === "dia" && eliminandoTurnoId.id === t.id}
+                      >
+                        {eliminandoTurnoId?.tipo === "dia" && eliminandoTurnoId.id === t.id ? "Eliminando..." : "Eliminar"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {!loadingTurnos && turnosDia.length === 0 && (
+                  <tr>
+                    <td colSpan={5} style={{ padding: "12px 8px", color: "var(--muted)" }}>
+                      Sin turnos cargados
+                    </td>
+                  </tr>
+                )}
+                {loadingTurnos && (
+                  <tr>
+                    <td colSpan={5} style={{ padding: "12px 8px", color: "var(--muted)" }}>
+                      Cargando...
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </section>
   );
 }
+  const dificultades = ["FACIL", "MEDIA", "DIFICIL", "EXPERTO"];
+  const categorias = [
+    "Roles ocultos",
+    "Familiar set collection",
+    "Cooperativo Familiar",
+    "Familiar",
+    "Trivia",
+    "Party game humor",
+    "Formación de patrones",
+    "Familiar cartas",
+    "Rol",
+    "Euro game",
+    "Set collection cartas",
+    "Deducción",
+    "Cooperativo",
+    "Control de territorio",
+    "Cooperativo cartas",
+  ];
