@@ -10,6 +10,12 @@ export type ReservaResponseDto = {
 
 export type MesaDisponibilidadDto = { id: number; numero: number; capacidad: number; disponible: boolean };
 export type DisponibilidadTurnoResponseDto = { turnoDiaId: number; fecha: string; mesas: MesaDisponibilidadDto[] };
+export type ReservaAdminFiltro = {
+  nombreUsuario?: string;
+  numeroMesa?: number;
+  fechaTurno?: string;
+  diaSemana?: string;
+};
 
 export const crearReserva = (dto: ReservaRequestDto) =>
   api.post<ReservaResponseDto>("/reservas", dto).then(r => r.data);
@@ -23,3 +29,12 @@ export const cancelarReserva = (id: number) =>
 export const obtenerDisponibilidad = (fecha: string, turnoDiaId: number) =>
   api.get<DisponibilidadTurnoResponseDto>("/reservas/disponibilidad", { params: { fecha, turnoDiaId } })
     .then(r => r.data);
+
+export const listarReservasAdmin = (filtros?: ReservaAdminFiltro) => {
+  const params: any = {};
+  if (filtros?.nombreUsuario) params.nombreUsuario = filtros.nombreUsuario;
+  if (filtros?.numeroMesa) params.numeroMesa = filtros.numeroMesa;
+  if (filtros?.fechaTurno) params.fechaTurno = filtros.fechaTurno;
+  if (filtros?.diaSemana) params.diaSemana = filtros.diaSemana;
+  return api.get<ReservaResponseDto[]>("/reservas", { params }).then(r => r.data);
+};

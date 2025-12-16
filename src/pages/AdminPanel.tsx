@@ -11,6 +11,7 @@ import {
   type TurnoHorario,
   type TurnoDia,
 } from "../api/turnos.api";
+import { listarReservasAdmin, cancelarReserva, type ReservaResponseDto } from "../api/reservas.api";
 import {
   listarJuegosParaJugar,
   listarJuegosParaVender,
@@ -24,7 +25,7 @@ import {
 
 type FiltrosUsuarios = { nombre: string; email: string; rol: string };
 type FiltrosMesas = { numero: string; capacidad: string };
-type Vista = "menu" | "usuarios" | "mesas" | "turnos" | "juegos";
+type Vista = "menu" | "usuarios" | "mesas" | "turnos" | "juegos" | "reservas";
 
 export default function AdminPanel() {
   const [vista, setVista] = useState<Vista>("menu");
@@ -102,6 +103,18 @@ export default function AdminPanel() {
   });
   const [eliminandoJuego, setEliminandoJuego] = useState<{ tipo: "jugar" | "vender"; id: number } | null>(null);
 
+  // Reservas
+  const [reservas, setReservas] = useState<ReservaResponseDto[]>([]);
+  const [loadingReservas, setLoadingReservas] = useState(false);
+  const [errorReservas, setErrorReservas] = useState<string | null>(null);
+  const [filtrosReservas, setFiltrosReservas] = useState<{ nombreUsuario: string; numeroMesa: string; fechaTurno: string; diaSemana: string }>({
+    nombreUsuario: "",
+    numeroMesa: "",
+    fechaTurno: "",
+    diaSemana: "",
+  });
+  const [eliminandoReserva, setEliminandoReserva] = useState<number | null>(null);
+
   async function fetchUsuarios() {
     setLoadingUsuarios(true);
     setErrorUsuarios(null);
@@ -156,6 +169,24 @@ export default function AdminPanel() {
     }
   }
 
+  async function fetchReservas() {
+    setLoadingReservas(true);
+    setErrorReservas(null);
+    try {
+      const data = await listarReservasAdmin({
+        nombreUsuario: filtrosReservas.nombreUsuario || undefined,
+        numeroMesa: filtrosReservas.numeroMesa ? Number(filtrosReservas.numeroMesa) : undefined,
+        fechaTurno: filtrosReservas.fechaTurno || undefined,
+        diaSemana: filtrosReservas.diaSemana || undefined,
+      });
+      setReservas(data);
+    } catch (e: any) {
+      setErrorReservas(e?.response?.data?.message ?? "No se pudieron cargar las reservas");
+    } finally {
+      setLoadingReservas(false);
+    }
+  }
+
   async function fetchJuegos() {
     setLoadingJuegos(true);
     setErrorJuegos(null);
@@ -190,6 +221,7 @@ export default function AdminPanel() {
     if (vista === "mesas") fetchMesas();
     if (vista === "turnos") fetchTurnos();
     if (vista === "juegos") fetchJuegos();
+    if (vista === "reservas") fetchReservas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vista]);
 
@@ -318,6 +350,20 @@ export default function AdminPanel() {
     }
   }
 
+  async function handleCancelarReserva(id: number) {
+    const confirmar = window.confirm("Cancelar la reserva? Esta accion no se puede deshacer.");
+    if (!confirmar) return;
+    setEliminandoReserva(id);
+    try {
+      await cancelarReserva(id);
+      setReservas((prev) => prev.filter((r) => r.id !== id));
+    } catch (err: any) {
+      setErrorReservas(err?.response?.data?.message ?? "No se pudo cancelar la reserva");
+    } finally {
+      setEliminandoReserva(null);
+    }
+  }
+
   async function handleCrearTurnoHorario(e: React.FormEvent) {
     e.preventDefault();
     setErrorTurnos(null);
@@ -413,6 +459,15 @@ export default function AdminPanel() {
               <div className="hint">Catalogo para jugar y vender.</div>
             </div>
             <button className="btn primary" onClick={() => setVista("juegos")}>
+              Abrir
+            </button>
+          </div>
+          <div className="item" style={{ justifyContent: "space-between" }}>
+            <div>
+              <strong>Reservas</strong>
+              <div className="hint">Consultar y cancelar reservas.</div>
+            </div>
+            <button className="btn primary" onClick={() => setVista("reservas")}>
               Abrir
             </button>
           </div>
@@ -953,6 +1008,120 @@ export default function AdminPanel() {
             </div>
           </>
         )}
+      </section>
+    );
+  }
+
+  if (vista === "reservas") {
+    return (
+      <section className="card">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button className="btn ghost" onClick={() => setVista("menu")}>{"<"}- Volver</button>
+            <div>
+              <h2 style={{ margin: 0 }}>Reservas</h2>
+              <p className="sub" style={{ margin: 0 }}>Consulta y cancela reservas (solo ADMIN).</p>
+            </div>
+          </div>
+          <button className="btn ghost" onClick={fetchReservas} disabled={loadingReservas}>
+            {loadingReservas ? "Actualizando..." : "Refrescar"}
+          </button>
+        </div>
+
+        <div className="row" style={{ marginTop: 16, flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <label className="label">Usuario</label>
+            <input
+              className="input"
+              placeholder="Nombre o email"
+              value={filtrosReservas.nombreUsuario}
+              onChange={(e) => setFiltrosReservas((f) => ({ ...f, nombreUsuario: e.target.value }))}
+            />
+          </div>
+          <div style={{ flex: 1, minWidth: 140 }}>
+            <label className="label">Mesa</label>
+            <input
+              className="input"
+              type="number"
+              min={1}
+              placeholder="Ej: 4"
+              value={filtrosReservas.numeroMesa}
+              onChange={(e) => setFiltrosReservas((f) => ({ ...f, numeroMesa: e.target.value }))}
+            />
+          </div>
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <label className="label">Fecha turno</label>
+            <input
+              className="input"
+              type="date"
+              value={filtrosReservas.fechaTurno}
+              onChange={(e) => setFiltrosReservas((f) => ({ ...f, fechaTurno: e.target.value }))}
+            />
+          </div>
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <label className="label">Día semana</label>
+            <select
+              className="input"
+              value={filtrosReservas.diaSemana}
+              onChange={(e) => setFiltrosReservas((f) => ({ ...f, diaSemana: e.target.value }))}
+            >
+              <option value="">Todos</option>
+              {["LUNES","MARTES","MIERCOLES","JUEVES","VIERNES","SABADO","DOMINGO"].map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+            <button className="btn primary" type="button" onClick={fetchReservas} disabled={loadingReservas}>
+              {loadingReservas ? "Buscando..." : "Aplicar filtros"}
+            </button>
+            <button
+              className="btn ghost"
+              type="button"
+              onClick={() => {
+                setFiltrosReservas({ nombreUsuario: "", numeroMesa: "", fechaTurno: "", diaSemana: "" });
+                setTimeout(fetchReservas, 0);
+              }}
+            >
+              Limpiar
+            </button>
+          </div>
+        </div>
+
+        {errorReservas && <div className="alert error" style={{ marginTop: 12 }}>{errorReservas}</div>}
+
+        <div className="card" style={{ marginTop: 12, background: "rgba(17,26,46,.6)", border: "1px solid var(--border)", boxShadow: "0 10px 30px rgba(0,0,0,.25)" }}>
+          <div className="list">
+            {reservas.map((r) => (
+              <div key={r.id} className="item" style={{ justifyContent: "space-between" }}>
+                <div>
+                  <strong>Reserva #{r.id}</strong>
+                  <div className="hint">
+                    Usuario: {r.nombreUsuario || r.usuarioId} · Mesa {r.numeroMesa} · Fecha {r.fechaTurno} · {r.horaInicio}-{r.horaFin} ({r.diaSemana})
+                  </div>
+                  <div className="hint">Estado: {r.estado}</div>
+                </div>
+                {r.estado?.toUpperCase() === "RESERVADO" ? (
+                  <button
+                    className="btn danger"
+                    onClick={() => handleCancelarReserva(r.id)}
+                    disabled={eliminandoReserva === r.id}
+                  >
+                    {eliminandoReserva === r.id ? "Cancelando..." : "Cancelar"}
+                  </button>
+                ) : (
+                  <span className="hint">Ya cancelada</span>
+                )}
+              </div>
+            ))}
+            {!loadingReservas && reservas.length === 0 && (
+              <div className="item"><span className="hint">Sin reservas para estos filtros.</span></div>
+            )}
+            {loadingReservas && (
+              <div className="item"><span className="hint">Cargando...</span></div>
+            )}
+          </div>
+        </div>
       </section>
     );
   }
