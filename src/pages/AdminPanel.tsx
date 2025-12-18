@@ -22,6 +22,7 @@ import {
   type JuegoParaJugar,
   type JuegoParaVender,
 } from "../api/juegos.api";
+import { parseApiError } from "../api/api-error";
 
 type FiltrosUsuarios = { nombre: string; email: string; rol: string };
 type FiltrosMesas = { numero: string; capacidad: string };
@@ -126,7 +127,8 @@ export default function AdminPanel() {
       });
       setUsuarios(data);
     } catch (e: any) {
-      setErrorUsuarios(e?.response?.data?.message ?? "No se pudieron cargar los usuarios");
+      const { message } = parseApiError(e, "No se pudieron cargar los usuarios");
+      setErrorUsuarios(message);
     } finally {
       setLoadingUsuarios(false);
     }
@@ -142,7 +144,8 @@ export default function AdminPanel() {
       });
       setMesas(data);
     } catch (e: any) {
-      setErrorMesas(e?.response?.data?.message ?? "No se pudieron cargar las mesas");
+      const { message } = parseApiError(e, "No se pudieron cargar las mesas");
+      setErrorMesas(message);
     } finally {
       setLoadingMesas(false);
     }
@@ -163,7 +166,8 @@ export default function AdminPanel() {
         setTurnosDia(data);
       }
     } catch (e: any) {
-      setErrorTurnos(e?.response?.data?.message ?? "No se pudieron cargar los turnos");
+      const { message } = parseApiError(e, "No se pudieron cargar los turnos");
+      setErrorTurnos(message);
     } finally {
       setLoadingTurnos(false);
     }
@@ -181,7 +185,8 @@ export default function AdminPanel() {
       });
       setReservas(data);
     } catch (e: any) {
-      setErrorReservas(e?.response?.data?.message ?? "No se pudieron cargar las reservas");
+      const { message } = parseApiError(e, "No se pudieron cargar las reservas");
+      setErrorReservas(message);
     } finally {
       setLoadingReservas(false);
     }
@@ -210,7 +215,8 @@ export default function AdminPanel() {
         setJuegosVender(data);
       }
     } catch (e: any) {
-      setErrorJuegos(e?.response?.data?.message ?? "No se pudieron cargar los juegos");
+      const { message } = parseApiError(e, "No se pudieron cargar los juegos");
+      setErrorJuegos(message);
     } finally {
       setLoadingJuegos(false);
     }
@@ -233,7 +239,8 @@ export default function AdminPanel() {
       await eliminarUsuario(id);
       setUsuarios((prev) => prev.filter((u) => u.id !== id));
     } catch (e: any) {
-      setErrorUsuarios(e?.response?.data?.message ?? "No se pudo eliminar el usuario");
+      const { message } = parseApiError(e, "No se pudo eliminar el usuario");
+      setErrorUsuarios(message);
     } finally {
       setEliminandoUsuario(null);
     }
@@ -251,7 +258,8 @@ export default function AdminPanel() {
       setNuevaMesa({ numero: "", capacidad: "" });
       setMesas((prev) => [mesaCreada, ...prev]);
     } catch (err: any) {
-      setErrorMesas(err?.response?.data?.message ?? "No se pudo crear la mesa");
+      const { message } = parseApiError(err, "No se pudo crear la mesa");
+      setErrorMesas(message);
     } finally {
       setCreandoMesa(false);
     }
@@ -265,7 +273,8 @@ export default function AdminPanel() {
       await eliminarMesa(id);
       setMesas((prev) => prev.filter((m) => m.id !== id));
     } catch (err: any) {
-      setErrorMesas(err?.response?.data?.message ?? "No se pudo eliminar la mesa");
+      const { message } = parseApiError(err, "No se pudo eliminar la mesa");
+      setErrorMesas(message);
     } finally {
       setEliminandoMesa(null);
     }
@@ -294,7 +303,8 @@ export default function AdminPanel() {
       setJuegosJugar((prev) => [creado, ...prev]);
       setVistaJuegoTab("jugar");
     } catch (err: any) {
-      setErrorJuegos(err?.response?.data?.message ?? "No se pudo crear el juego");
+      const { message } = parseApiError(err, "No se pudo crear el juego");
+      setErrorJuegos(message);
     } finally {
       setLoadingJuegos(false);
     }
@@ -325,7 +335,8 @@ export default function AdminPanel() {
       setJuegosVender((prev) => [creado, ...prev]);
       setVistaJuegoTab("vender");
     } catch (err: any) {
-      setErrorJuegos(err?.response?.data?.message ?? "No se pudo crear el juego");
+      const { message } = parseApiError(err, "No se pudo crear el juego");
+      setErrorJuegos(message);
     } finally {
       setLoadingJuegos(false);
     }
@@ -344,7 +355,8 @@ export default function AdminPanel() {
         setJuegosVender((prev) => prev.filter((j) => j.id !== id));
       }
     } catch (err: any) {
-      setErrorJuegos(err?.response?.data?.message ?? "No se pudo eliminar el juego");
+      const { message } = parseApiError(err, "No se pudo eliminar el juego");
+      setErrorJuegos(message);
     } finally {
       setEliminandoJuego(null);
     }
@@ -358,7 +370,8 @@ export default function AdminPanel() {
       await cancelarReserva(id);
       setReservas((prev) => prev.filter((r) => r.id !== id));
     } catch (err: any) {
-      setErrorReservas(err?.response?.data?.message ?? "No se pudo cancelar la reserva");
+      const { message } = parseApiError(err, "No se pudo cancelar la reserva");
+      setErrorReservas(message);
     } finally {
       setEliminandoReserva(null);
     }
@@ -374,7 +387,8 @@ export default function AdminPanel() {
       setHorarios((prev) => [nuevo, ...prev]);
       setVistaTurnoTab("horarios");
     } catch (err: any) {
-      setErrorTurnos(err?.response?.data?.message ?? "No se pudo crear el turno horario");
+      const { message } = parseApiError(err, "No se pudo crear el turno horario");
+      setErrorTurnos(message);
     } finally {
       setLoadingTurnos(false);
     }
@@ -394,7 +408,8 @@ export default function AdminPanel() {
       setTurnosDia((prev) => [nuevo, ...prev]);
       setVistaTurnoTab("dias");
     } catch (err: any) {
-      setErrorTurnos(err?.response?.data?.message ?? "No se pudo crear el turno dia");
+      const { message } = parseApiError(err, "No se pudo crear el turno dia");
+      setErrorTurnos(message);
     } finally {
       setLoadingTurnos(false);
     }
@@ -413,7 +428,8 @@ export default function AdminPanel() {
         setTurnosDia((prev) => prev.filter((t) => t.id !== id));
       }
     } catch (err: any) {
-      setErrorTurnos(err?.response?.data?.message ?? "No se pudo eliminar");
+      const { message } = parseApiError(err, "No se pudo eliminar");
+      setErrorTurnos(message);
     } finally {
       setEliminandoTurnoId(null);
     }

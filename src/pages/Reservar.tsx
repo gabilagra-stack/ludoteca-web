@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { crearReserva, obtenerDisponibilidad, type MesaDisponibilidadDto } from "../api/reservas.api";
 import { listarTurnosDia, type TurnoDia } from "../api/turnos.api";
 import { useAuthStore } from "../auth/auth.store";
+import { parseApiError } from "../api/api-error";
 
 export default function Reservar() {
   const [fecha, setFecha] = useState(() => new Date().toISOString().slice(0, 10));
@@ -28,7 +29,8 @@ export default function Reservar() {
       const data = await listarTurnosDia({ fecha: selectedDate });
       setTurnos(data);
     } catch (err: any) {
-      setMsg({ type: "error", text: err?.response?.data?.message ?? "No se pudieron cargar los turnos" });
+      const { message } = parseApiError(err, "No se pudieron cargar los turnos");
+      setMsg({ type: "error", text: message });
     }
   }
 
@@ -41,7 +43,8 @@ export default function Reservar() {
       const resp = await obtenerDisponibilidad(fechaSeleccionada, turnoId);
       setDisponibilidad(resp.mesas);
     } catch (err: any) {
-      setMsg({ type: "error", text: err?.response?.data?.message ?? "No se pudo obtener disponibilidad" });
+      const { message } = parseApiError(err, "No se pudo obtener disponibilidad");
+      setMsg({ type: "error", text: message });
     } finally {
       setLoadingDisponibilidad(false);
     }
@@ -63,7 +66,8 @@ export default function Reservar() {
       const res = await crearReserva({ mesaId, turnoDiaId, usuarioId: user?.id });
       setMsg({ type: "success", text: `Reserva #${res.id} creada (${res.estado}).` });
     } catch (e: any) {
-      setMsg({ type: "error", text: e?.response?.data?.message ?? "Error creando reserva" });
+      const { message } = parseApiError(e, "Error creando reserva");
+      setMsg({ type: "error", text: message });
     } finally {
       setLoading(false);
     }

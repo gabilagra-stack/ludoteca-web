@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../api/auth.api";
+import { parseApiError } from "../api/api-error";
 
 export default function RegisterPage() {
   const [nombre, setNombre] = useState("");
@@ -19,7 +20,8 @@ export default function RegisterPage() {
       await register({ nombre, email, password });
       navigate("/login", { state: { message: "Cuenta creada. Inicia sesión para continuar." } });
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? "No se pudo crear el usuario");
+      const { message } = parseApiError(err, "No se pudo crear el usuario");
+      setError(message);
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { listarJuegosParaComprar, type JuegoParaVenderResponseDto } from "../api/juegos.api";
+import { parseApiError } from "../api/api-error";
 
 type Filters = {
   nombre: string;
@@ -54,7 +55,8 @@ export default function JuegosParaComprar() {
       const data = await listarJuegosParaComprar(params);
       setJuegos(data);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? "No se pudieron cargar los juegos");
+      const { message } = parseApiError(err, "No se pudieron cargar los juegos");
+      setError(message);
     } finally {
       setLoading(false);
     }

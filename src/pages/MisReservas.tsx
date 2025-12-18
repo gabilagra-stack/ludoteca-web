@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { cancelarReserva, listarMisReservas } from "../api/reservas.api";
 import type { ReservaResponseDto } from "../api/reservas.api";
+import { parseApiError } from "../api/api-error";
 
 export default function MisReservas(){
   const [data, setData] = useState<ReservaResponseDto[]>([]);
@@ -14,7 +15,8 @@ export default function MisReservas(){
       const res = await listarMisReservas();
       setData(res);
     }catch(e:any){
-      setMsg({type:"error", text: e?.response?.data?.message ?? "Error cargando reservas"});
+      const { message } = parseApiError(e, "Error cargando reservas");
+      setMsg({type:"error", text: message});
     }finally{
       setLoading(false);
     }
@@ -28,7 +30,8 @@ export default function MisReservas(){
       setMsg({type:"success", text:`Reserva #${id} cancelada`});
       await load();
     }catch(e:any){
-      setMsg({type:"error", text: e?.response?.data?.message ?? "Error cancelando"});
+      const { message } = parseApiError(e, "Error cancelando");
+      setMsg({type:"error", text: message});
     }
   }
 
