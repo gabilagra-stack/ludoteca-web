@@ -5,6 +5,7 @@ import { Button } from "../components/ui/Button";
 import { Checkbox } from "../components/ui/Checkbox";
 import { Label } from "../components/ui/Label";
 import { login as loginApi } from "../api/auth.api";
+import { parseApiError } from "../api/api-error";
 import { useAuthStore } from "../auth/auth.store";
 
 export default function LoginPage() {
@@ -34,7 +35,8 @@ export default function LoginPage() {
       setAuth(token, user);
       navigate("/");
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? "No se pudo iniciar sesion");
+      const { message } = parseApiError(err, "No se pudo iniciar sesion");
+      setError(message);
     } finally {
       setLoading(false);
     }
