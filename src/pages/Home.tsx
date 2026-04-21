@@ -124,13 +124,13 @@ export default function Home() {
           <h2>¡Seguinos y mirá lo que se juega!</h2>
           <div className="social-links-row">
             <a href="#" className="social-badge">
-               <span className="social-ig">📷</span> Instagram
+               <img src="/Logo_ig.png" alt="Instagram" className="social-ig-logo" /> Instagram
             </a>
             <a href="#" className="social-badge">
-               <span className="social-wa">💬</span> WhatsApp
+               <img src="/logo_wp.png" alt="WhatsApp" className="social-wa-logo" /> WhatsApp
             </a>
             <a href="#" className="social-badge">
-               <span className="social-fb">f</span> Facebook
+               <img src="/Logo_fb.png" alt="Facebook" className="social-fb-logo" /> Facebook
             </a>
           </div>
         </div>

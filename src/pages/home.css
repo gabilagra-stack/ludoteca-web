@@ -470,14 +470,20 @@
   transform: translateY(-4px);
 }
 
-.social-ig {
-  color: #f472b6;
+.social-ig-logo {
+  height: 20px;
+  width: auto;
+  object-fit: contain;
 }
 
-.social-wa {
-  color: #4ade80;
+.social-wa-logo {
+  height: 20px;
+  width: auto;
+  object-fit: contain;
 }
 
-.social-fb {
-  color: #60a5fa;
+.social-fb-logo {
+  height: 20px;
+  width: auto;
+  object-fit: contain;
 }
