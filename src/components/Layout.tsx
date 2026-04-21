@@ -1,14 +1,16 @@
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../auth/auth.store";
 
 export default function Layout() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isHome = location.pathname === "/";
 
   return (
     <>
-      <header className="nav">
+      <header className={`nav ${isHome ? "nav-home" : ""}`}>
         <div className="nav-inner">
           <Link to="/" className="brand">Ludoteca</Link>
           <NavLink to="/" className={({ isActive }) => (isActive ? "active" : "")}>Inicio</NavLink>
@@ -28,7 +30,7 @@ export default function Layout() {
             <>
               <span className="badge">{user.email}</span>
               <button
-                className="link"
+                className="nav-btn-logout"
                 onClick={() => {
                   logout();
                   navigate("/login");
@@ -38,7 +40,10 @@ export default function Layout() {
               </button>
             </>
           ) : (
-            <NavLink to="/login" className={({ isActive }) => (isActive ? "active" : "")}>Ingresar</NavLink>
+            <NavLink to="/login" className={({ isActive }) => "nav-btn-login " + (isActive ? "active" : "")}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Iniciar sesión
+            </NavLink>
           )}
         </div>
       </header>
