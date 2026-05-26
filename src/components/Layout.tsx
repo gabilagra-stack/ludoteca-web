@@ -7,10 +7,12 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const isLogin = location.pathname === "/login";
+  const useBoardNav = isHome || isLogin;
 
   return (
     <>
-      <header className={`nav ${isHome ? "nav-home" : ""}`}>
+      <header className={`nav ${useBoardNav ? "nav-home" : ""}`}>
         <div className="nav-inner">
           <Link to="/" className="brand">Ludoteca</Link>
           <NavLink to="/" className={({ isActive }) => (isActive ? "active" : "")}>Inicio</NavLink>
@@ -40,10 +42,12 @@ export default function Layout() {
               </button>
             </>
           ) : (
-            <NavLink to="/login" className={({ isActive }) => "nav-btn-login " + (isActive ? "active" : "")}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              Iniciar sesión
-            </NavLink>
+            !isLogin && (
+              <NavLink to="/login" className={({ isActive }) => "nav-btn-login " + (isActive ? "active" : "")}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Iniciar sesión
+              </NavLink>
+            )
           )}
         </div>
       </header>
