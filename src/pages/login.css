@@ -1,0 +1,577 @@
+/* ===========================================
+   Login Page – Board Game Theme
+   Consistent with home.css visual style
+   =========================================== */
+
+/* Full-page wrapper */
+.login-page {
+  background-color: #0a0a0a;
+  color: #fff;
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+  /* Compensate for container padding from Layout */
+  margin: -24px;
+  padding: 0;
+}
+
+/* Section that contains the background image – stops at the footer */
+.login-content-section {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background image – fills the login-content-section (NOT the footer) */
+.login-hero-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to bottom,
+      rgba(8, 8, 8, 0.25) 0%,
+      rgba(8, 8, 8, 0.10) 25%,
+      rgba(8, 8, 8, 0.35) 75%,
+      rgba(8, 8, 8, 0.90) 100%
+    ),
+    linear-gradient(to right,
+      rgba(8, 8, 8, 0.0) 0%,
+      rgba(8, 8, 8, 0.50) 55%,
+      rgba(8, 8, 8, 0.85) 100%
+    ),
+    url("/login_hero.png");
+  background-size: auto 90%;
+  background-position: 0% center;
+  background-repeat: no-repeat;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Fallback – pseudo element disabled */
+.login-page::before {
+  display: none;
+}
+
+
+/* Main content container */
+.login-content {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 24px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: stretch;
+  min-height: calc(100vh - 160px);
+}
+
+/* ===== LEFT COLUMN: Visual / Hero ===== */
+.login-visual {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 60px 20px 60px 0;
+}
+
+.login-visual-text {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 15px; /* raise the text group slightly */
+}
+
+.login-visual-title {
+  font-size: 42px;
+  font-weight: 900;
+  line-height: 1.05;
+  text-transform: uppercase;
+  margin: 0;
+  color: #fff;
+  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000,
+    -1px 1px 0 #000, 1px 1px 0 #000, 4px 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.login-visual-title span {
+  color: var(--board-yellow);
+  display: block;
+}
+
+.login-visual-subtitle {
+  font-size: 16px;
+  color: #cbd5e1;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 400px;
+}
+
+.login-visual-image {
+  width: 100%;
+  max-width: 460px;
+  border-radius: 18px;
+  border: 4px solid #2a2a2a;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  object-fit: cover;
+  aspect-ratio: 4 / 3;
+}
+
+/* Badge at the bottom of the visual column */
+.login-visual-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  background: #131315; /* Fondo ultra oscuro y elegante */
+  border: 1.5px solid #27272a; /* Borde muy sutil y premium */
+  border-radius: 16px;
+  padding: 16px 24px;
+  max-width: 380px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+
+.login-visual-badge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: auto;
+  height: auto;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.login-visual-badge-text {
+  font-size: 15px;
+  color: #cbd5e1;
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+.login-visual-badge-text strong {
+  color: #facc15; /* Mismo dorado brillante que el meeple */
+  font-weight: 700;
+}
+
+/* ===== RIGHT COLUMN: Login Card ===== */
+.login-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 42px;
+}
+
+.login-board-card {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  padding: 48px 56px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(34,34,36,.96), rgba(13,13,15,.98));
+  border: 9px solid #543118; /* Borde de madera más oscuro y rico */
+  box-shadow:
+    0 28px 70px rgba(0,0,0,.75),
+    inset 0 0 0 1px rgba(255,255,255,.05);
+}
+
+/* Badge superior centrado – hexágono lúdico con meeple SVG */
+.login-card-hexagon {
+  position: absolute;
+  top: -48px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 90px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.55));
+}
+
+
+/* Soportes metálicos angulares y tornillos decorativos en las esquinas */
+.corner-dot {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  background: #1c1917; /* Metal carbón oscuro */
+  z-index: 3;
+}
+
+.corner-dot::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fffbeb 0%, #facc15 35%, #b45309 80%, #78350f 100%);
+  border: 1.5px solid #1c1917;
+  box-shadow: 1px 1.5px 2px rgba(0,0,0,0.8), inset -0.5px -0.5px 1px rgba(0,0,0,0.6);
+}
+
+.corner-tl {
+  top: 0;
+  left: 0;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  border-top-left-radius: 14px;
+}
+.corner-tl::after {
+  top: 7px;
+  left: 7px;
+}
+
+.corner-tr {
+  top: 0;
+  right: 0;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  border-top-right-radius: 14px;
+}
+.corner-tr::after {
+  top: 7px;
+  right: 7px;
+}
+
+.corner-bl {
+  bottom: 0;
+  left: 0;
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+  border-bottom-left-radius: 14px;
+}
+.corner-bl::after {
+  bottom: 7px;
+  left: 7px;
+}
+
+.corner-br {
+  bottom: 0;
+  right: 0;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  border-bottom-right-radius: 14px;
+}
+.corner-br::after {
+  bottom: 7px;
+  right: 7px;
+}
+
+.login-card-title {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 24px 0 28px;
+  color: #fff;
+  text-shadow: 1px 1px 0 #000;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-card-title::after {
+  content: "";
+  width: 48px;
+  height: 4px;
+  background-color: var(--board-yellow, #facc15);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* Form elements */
+.login-field {
+  margin-bottom: 18px;
+}
+
+.login-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #a1a1aa;
+  margin-bottom: 6px;
+  text-transform: none;
+}
+
+.login-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login-input-icon {
+  position: absolute;
+  left: 14px;
+  color: #facc15;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.login-input {
+  width: 100%;
+  padding: 12px 42px 12px 42px;
+  background: #18181b;
+  border: 2px solid #3f3f46;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-input::placeholder {
+  color: #71717a;
+}
+
+.login-input:focus {
+  border-color: var(--board-yellow);
+  box-shadow: 0 0 0 3px rgba(252, 211, 77, 0.15);
+}
+
+.login-input-action {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #71717a;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.login-input-action:hover {
+  color: var(--board-yellow);
+}
+
+/* Remember me / forgot password row */
+.login-options-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.login-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.login-remember-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--board-yellow);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.login-remember-label {
+  font-size: 13px;
+  color: #a1a1aa;
+  font-weight: 500;
+}
+
+.login-forgot {
+  font-size: 13px;
+  color: var(--board-yellow);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.login-forgot:hover {
+  color: #fde68a;
+  text-decoration: underline;
+}
+
+/* Error / Info messages */
+.login-error {
+  text-align: center;
+  font-size: 13px;
+  color: #fff;
+  background: rgba(220, 38, 38, 0.7);
+  border: 1px solid rgba(220, 38, 38, 0.5);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+
+.login-info {
+  text-align: center;
+  font-size: 13px;
+  color: #fff;
+  background: rgba(34, 197, 94, 0.6);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+
+/* Submit button – estilo tablero con sombra 3D */
+.login-submit-btn {
+  width: 100%;
+  padding: 16px 24px;
+  border-radius: 10px;
+  background: #facc15;
+  color: #111;
+  border: 4px solid #111;
+  font-weight: 900;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  box-shadow: 0 7px 0 #111;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.login-submit-btn:hover {
+  transform: translateY(2px);
+  box-shadow: 0 5px 0 #111;
+}
+
+.login-submit-btn:active {
+  transform: translateY(7px);
+  box-shadow: 0 0 0 #111;
+}
+
+.login-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 7px 0 #111;
+}
+
+/* Separator "o" */
+.login-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+  position: relative;
+}
+
+.login-separator::before,
+.login-separator::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #3f3f46;
+}
+
+.login-separator span {
+  padding: 0 16px;
+  font-size: 14px;
+  color: #71717a;
+  font-weight: 500;
+}
+
+/* Create account link */
+.login-create-account {
+  text-align: center;
+  font-size: 14px;
+  color: #a1a1aa;
+}
+
+.login-create-account a {
+  color: var(--board-yellow);
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.login-create-account a:hover {
+  color: #fde68a;
+  text-decoration: underline;
+}
+
+/* Decorative meeples at bottom right of card */
+.login-decoration {
+  position: absolute;
+  bottom: -30px;
+  right: -20px;
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* ===== FOOTER (reuses board-footer styles from home.css) ===== */
+.login-footer-wrap {
+  position: relative;
+  z-index: 1;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  background-color: #fcd34d !important;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  background-size: 15px 15px;
+  border-top: 6px solid #111;
+  padding: 40px 0;
+  margin-top: 0;
+  color: #111;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .login-content {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding: 30px 20px 0;
+    min-height: auto;
+  }
+
+  .login-visual {
+    text-align: center;
+    align-items: center;
+    padding-right: 0;
+  }
+
+  .login-visual-title {
+    font-size: 30px;
+  }
+
+  .login-visual-subtitle {
+    max-width: 100%;
+  }
+
+  .login-visual-image {
+    max-width: 340px;
+  }
+
+  .login-visual-badge {
+    max-width: 100%;
+  }
+
+  .login-board-card {
+    max-width: 100%;
+    padding: 40px 28px;
+  }
+
+  .login-decoration {
+    right: 10px;
+    bottom: -24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-visual-title {
+    font-size: 26px;
+  }
+
+  .login-board-card {
+    padding: 32px 20px 28px;
+  }
+
+  .login-options-row {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+}
