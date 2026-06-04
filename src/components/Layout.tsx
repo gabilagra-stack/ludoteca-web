@@ -8,7 +8,8 @@ export default function Layout() {
   const location = useLocation();
   const isHome = location.pathname === "/";
   const isLogin = location.pathname === "/login";
-  const useBoardNav = isHome || isLogin;
+  const useBoardNav = isHome || isLogin || location.pathname.startsWith("/juegos-para-");
+  const userInitial = user?.email?.charAt(0).toUpperCase() ?? "U";
 
   return (
     <>
@@ -29,8 +30,9 @@ export default function Layout() {
           )}
           <div className="spacer" />
           {user ? (
-            <>
-              <span className="badge">{user.email}</span>
+            <div className="nav-user">
+              <span className="nav-user-avatar" aria-hidden="true">{userInitial}</span>
+              <span className="badge nav-user-email">{user.email}</span>
               <button
                 className="nav-btn-logout"
                 onClick={() => {
@@ -40,7 +42,7 @@ export default function Layout() {
               >
                 Salir
               </button>
-            </>
+            </div>
           ) : (
             !isLogin && (
               <NavLink to="/login" className={({ isActive }) => "nav-btn-login " + (isActive ? "active" : "")}>

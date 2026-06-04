@@ -33,6 +33,23 @@ type Filtros = {
 
 type FiltrosVender = Filtros & { stock?: number };
 
+export const JUEGOS_PARA_JUGAR_PAGE_SIZE = 7;
+
+// Pendiente backend: GET /juegos/jugar debe aceptar page zero-based y size,
+// y responder PaginaJuegosResponse<JuegoParaJugar>.
+export type PaginacionJuegosParams = {
+  page?: number;
+  size?: number;
+};
+
+export type PaginaJuegosResponse<T> = {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+};
+
 function buildQuery(params: Record<string, string | number | undefined>) {
   const q = new URLSearchParams();
   Object.entries(params).forEach(([key, val]) => {
