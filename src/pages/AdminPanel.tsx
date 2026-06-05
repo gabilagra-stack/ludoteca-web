@@ -28,6 +28,83 @@ type FiltrosUsuarios = { nombre: string; email: string; rol: string };
 type FiltrosMesas = { numero: string; capacidad: string };
 type Vista = "menu" | "usuarios" | "mesas" | "turnos" | "juegos" | "reservas";
 
+type AdminMenuItem = {
+  vista: Exclude<Vista, "menu">;
+  title: string;
+  description: string;
+  icon: "usuarios" | "mesas" | "turnos" | "juegos" | "reservas";
+};
+
+const adminMenuItems: AdminMenuItem[] = [
+  { vista: "usuarios", title: "Usuarios", description: "Alta, baja y filtros por rol.", icon: "usuarios" },
+  { vista: "mesas", title: "Mesas", description: "Configurar mesas y capacidad.", icon: "mesas" },
+  { vista: "turnos", title: "Turnos", description: "Horarios y turnos por fecha.", icon: "turnos" },
+  { vista: "juegos", title: "Juegos", description: "Catalogo para jugar y vender.", icon: "juegos" },
+  { vista: "reservas", title: "Reservas", description: "Consultar y cancelar reservas.", icon: "reservas" },
+];
+
+function AdminMenuIcon({ type }: { type: AdminMenuItem["icon"] }) {
+  if (type === "usuarios") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="9" cy="8" r="4" />
+        <circle cx="17" cy="9" r="3" />
+        <path d="M2 21a7 7 0 0 1 14 0Z" />
+        <path d="M14 21a6 6 0 0 0-3-5.2A6 6 0 0 1 22 21Z" />
+      </svg>
+    );
+  }
+
+  if (type === "mesas") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <ellipse cx="12" cy="7" rx="8" ry="3" fill="currentColor" stroke="currentColor" />
+        <path d="M4 7v8" />
+        <path d="M20 7v8" />
+        <path d="M8 9v9" />
+        <path d="M16 9v9" />
+      </svg>
+    );
+  }
+
+  if (type === "turnos") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v6l4 2" />
+      </svg>
+    );
+  }
+
+  if (type === "juegos") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+        <rect x="4" y="4" width="16" height="16" rx="3" />
+        <circle cx="8.5" cy="8.5" r="1.2" fill="#111" />
+        <circle cx="15.5" cy="8.5" r="1.2" fill="#111" />
+        <circle cx="12" cy="12" r="1.2" fill="#111" />
+        <circle cx="8.5" cy="15.5" r="1.2" fill="#111" />
+        <circle cx="15.5" cy="15.5" r="1.2" fill="#111" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M8 2v4" />
+      <path d="M16 2v4" />
+      <rect width="18" height="18" x="3" y="4" rx="2" />
+      <path d="M3 10h18" />
+      <path d="M8 14h.01" />
+      <path d="M12 14h.01" />
+      <path d="M16 14h.01" />
+      <path d="M8 18h.01" />
+      <path d="M12 18h.01" />
+      <path d="M16 18h.01" />
+    </svg>
+  );
+}
+
 export default function AdminPanel() {
   const [vista, setVista] = useState<Vista>("menu");
 
@@ -437,55 +514,32 @@ export default function AdminPanel() {
 
   if (vista === "menu") {
     return (
-      <section className="card">
-        <h2 style={{ margin: 0 }}>Panel de administracion</h2>
-        <p className="sub" style={{ marginTop: 4 }}>Elige una seccion para gestionar.</p>
+      <section className="admin-menu-page">
+        <div className="admin-menu-shell">
+          <header className="games-heading admin-menu-heading">
+            <div className="board-page-title admin-menu-title">
+              <span className="title-icon">🎲</span>
+              <h1>Panel de administración</h1>
+              <span className="title-icon">🎲</span>
+            </div>
+            <p>Elegí una sección para gestionar.</p>
+          </header>
 
-        <div className="list" style={{ marginTop: 16 }}>
-          <div className="item" style={{ justifyContent: "space-between" }}>
-            <div>
-              <strong>Usuarios</strong>
-              <div className="hint">Alta, baja y filtros por rol.</div>
-            </div>
-            <button className="btn primary" onClick={() => setVista("usuarios")}>
-              Abrir
-            </button>
-          </div>
-          <div className="item" style={{ justifyContent: "space-between" }}>
-            <div>
-              <strong>Mesas</strong>
-              <div className="hint">Configurar mesas y capacidad.</div>
-            </div>
-            <button className="btn primary" onClick={() => setVista("mesas")}>
-              Abrir
-            </button>
-          </div>
-          <div className="item" style={{ justifyContent: "space-between" }}>
-            <div>
-              <strong>Turnos</strong>
-              <div className="hint">Horarios y turnos por fecha.</div>
-            </div>
-            <button className="btn primary" onClick={() => setVista("turnos")}>
-              Abrir
-            </button>
-          </div>
-          <div className="item" style={{ justifyContent: "space-between" }}>
-            <div>
-              <strong>Juegos</strong>
-              <div className="hint">Catalogo para jugar y vender.</div>
-            </div>
-            <button className="btn primary" onClick={() => setVista("juegos")}>
-              Abrir
-            </button>
-          </div>
-          <div className="item" style={{ justifyContent: "space-between" }}>
-            <div>
-              <strong>Reservas</strong>
-              <div className="hint">Consultar y cancelar reservas.</div>
-            </div>
-            <button className="btn primary" onClick={() => setVista("reservas")}>
-              Abrir
-            </button>
+          <div className="admin-menu-panel">
+            {adminMenuItems.map((item) => (
+              <article key={item.vista} className="admin-menu-row">
+                <span className="admin-menu-icon">
+                  <AdminMenuIcon type={item.icon} />
+                </span>
+                <div className="admin-menu-copy">
+                  <strong>{item.title}</strong>
+                  <span>{item.description}</span>
+                </div>
+                <button className="admin-menu-action" onClick={() => setVista(item.vista)}>
+                  Abrir
+                </button>
+              </article>
+            ))}
           </div>
         </div>
       </section>

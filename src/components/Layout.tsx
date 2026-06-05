@@ -13,7 +13,8 @@ export default function Layout() {
     isLogin ||
     location.pathname.startsWith("/juegos-para-") ||
     location.pathname === "/reservar" ||
-    location.pathname === "/mis-reservas";
+    location.pathname === "/mis-reservas" ||
+    location.pathname === "/admin";
   const userInitial = user?.email?.charAt(0).toUpperCase() ?? "U";
 
   return (
