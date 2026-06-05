@@ -105,6 +105,84 @@ function AdminMenuIcon({ type }: { type: AdminMenuItem["icon"] }) {
   );
 }
 
+function BackIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="m12 19-7-7 7-7" />
+      <path d="M19 12H5" />
+    </svg>
+  );
+}
+
+function RefreshIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M19 8a7 7 0 1 0 1 5" />
+      <path d="M19 4v4h-4" />
+    </svg>
+  );
+}
+
+function UserIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+    </svg>
+  );
+}
+
+function MailIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect width="18" height="14" x="3" y="5" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+    </svg>
+  );
+}
+
+function FilterIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 5h18l-7 8v5l-4 2v-7Z" />
+    </svg>
+  );
+}
+
+function BroomIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="m7 21-5-5L14 4l7 7-10 10Z" />
+      <path d="M12 6l6 6" />
+      <path d="M7 21h10" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="m19 6-1 14H6L5 6" />
+      <path d="M10 11v5" />
+      <path d="M14 11v5" />
+    </svg>
+  );
+}
+
+function RoleIcon({ role }: { role: string }) {
+  return role === "ADMIN" ? <ShieldIcon /> : <UserIcon />;
+}
+
 export default function AdminPanel() {
   const [vista, setVista] = useState<Vista>("menu");
 
@@ -548,115 +626,146 @@ export default function AdminPanel() {
 
   if (vista === "usuarios") {
     return (
-      <section className="card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button className="btn ghost" onClick={() => setVista("menu")}>{"<"}- Volver</button>
-            <div>
-              <h2 style={{ margin: 0 }}>Usuarios</h2>
-              <p className="sub" style={{ margin: 0 }}>Acceso restringido a ADMIN.</p>
+      <section className="admin-users-page">
+        <div className="admin-users-shell">
+          <header className="games-heading admin-users-heading">
+            <div className="board-page-title admin-users-title">
+              <span className="title-icon">🎲</span>
+              <h1>Gestión de usuarios</h1>
+              <span className="title-icon">🎲</span>
+            </div>
+            <p>Acceso restringido a ADMIN.</p>
+          </header>
+
+          <div className="admin-users-panel">
+            <div className="admin-users-toolbar">
+              <button className="admin-users-back" onClick={() => setVista("menu")}>
+                <BackIcon />
+                Volver
+              </button>
+              <button className="admin-users-refresh" onClick={fetchUsuarios} disabled={loadingUsuarios}>
+                <RefreshIcon />
+                {loadingUsuarios ? "Actualizando..." : "Refrescar"}
+              </button>
+            </div>
+
+            <div className="admin-users-filters">
+              <label className="admin-users-field">
+                <span>Nombre</span>
+                <div className="admin-users-input-wrap">
+                  <UserIcon />
+                  <input
+                    className="admin-users-input"
+                    placeholder="Buscar por nombre"
+                    value={filtrosUsuarios.nombre}
+                    onChange={(e) => setFiltrosUsuarios((f) => ({ ...f, nombre: e.target.value }))}
+                  />
+                </div>
+              </label>
+
+              <label className="admin-users-field">
+                <span>Email</span>
+                <div className="admin-users-input-wrap">
+                  <MailIcon />
+                  <input
+                    className="admin-users-input"
+                    placeholder="Buscar por email"
+                    value={filtrosUsuarios.email}
+                    onChange={(e) => setFiltrosUsuarios((f) => ({ ...f, email: e.target.value }))}
+                  />
+                </div>
+              </label>
+
+              <label className="admin-users-field">
+                <span>Rol</span>
+                <div className="admin-users-input-wrap">
+                  <ShieldIcon />
+                  <select
+                    className="admin-users-input"
+                    value={filtrosUsuarios.rol}
+                    onChange={(e) => setFiltrosUsuarios((f) => ({ ...f, rol: e.target.value }))}
+                  >
+                    <option value="">Todos</option>
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="USER">USER</option>
+                  </select>
+                </div>
+              </label>
+
+              <div className="admin-users-filter-actions">
+                <button className="admin-users-apply" onClick={fetchUsuarios} disabled={loadingUsuarios}>
+                  <FilterIcon />
+                  {loadingUsuarios ? "Buscando..." : "Aplicar filtros"}
+                </button>
+                <button
+                  className="admin-users-clear"
+                  type="button"
+                  onClick={() => {
+                    setFiltrosUsuarios({ nombre: "", email: "", rol: "" });
+                    setTimeout(fetchUsuarios, 0);
+                  }}
+                >
+                  <BroomIcon />
+                  Limpiar
+                </button>
+              </div>
+            </div>
+
+            {errorUsuarios && <div className="alert error admin-users-alert">{errorUsuarios}</div>}
+
+            <div className="admin-users-table-wrap">
+              <table className="admin-users-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {usuarios.map((u) => (
+                    <tr key={u.id}>
+                      <td>{u.id}</td>
+                      <td>{u.nombre}</td>
+                      <td>{u.email}</td>
+                      <td>
+                        <span className={`admin-users-role role-${u.rol.toLowerCase()}`}>
+                          <RoleIcon role={u.rol} />
+                          {u.rol}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className="admin-users-delete"
+                          onClick={() => handleEliminarUsuario(u.id)}
+                          disabled={eliminandoUsuario === u.id}
+                        >
+                          <TrashIcon />
+                          {eliminandoUsuario === u.id ? "Eliminando..." : "Eliminar"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {!loadingUsuarios && usuarios.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="admin-users-state">
+                        Sin resultados
+                      </td>
+                    </tr>
+                  )}
+                  {loadingUsuarios && (
+                    <tr>
+                      <td colSpan={5} className="admin-users-state">
+                        Cargando...
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
-          <button className="btn ghost" onClick={fetchUsuarios} disabled={loadingUsuarios}>
-            {loadingUsuarios ? "Actualizando..." : "Refrescar"}
-          </button>
-        </div>
-
-        <div className="row" style={{ marginTop: 16, flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 180 }}>
-            <label className="label">Nombre</label>
-            <input
-              className="input"
-              placeholder="Buscar por nombre"
-              value={filtrosUsuarios.nombre}
-              onChange={(e) => setFiltrosUsuarios((f) => ({ ...f, nombre: e.target.value }))}
-            />
-          </div>
-          <div style={{ flex: 1, minWidth: 180 }}>
-            <label className="label">Email</label>
-            <input
-              className="input"
-              placeholder="Buscar por email"
-              value={filtrosUsuarios.email}
-              onChange={(e) => setFiltrosUsuarios((f) => ({ ...f, email: e.target.value }))}
-            />
-          </div>
-          <div style={{ flex: 1, minWidth: 140 }}>
-            <label className="label">Rol</label>
-            <select
-              className="input"
-              value={filtrosUsuarios.rol}
-              onChange={(e) => setFiltrosUsuarios((f) => ({ ...f, rol: e.target.value }))}
-            >
-              <option value="">Todos</option>
-              <option value="ADMIN">ADMIN</option>
-              <option value="USER">USER</option>
-            </select>
-          </div>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-            <button className="btn primary" onClick={fetchUsuarios} disabled={loadingUsuarios}>
-              {loadingUsuarios ? "Buscando..." : "Aplicar filtros"}
-            </button>
-            <button
-              className="btn ghost"
-              type="button"
-              onClick={() => {
-                setFiltrosUsuarios({ nombre: "", email: "", rol: "" });
-                setTimeout(fetchUsuarios, 0);
-              }}
-            >
-              Limpiar
-            </button>
-          </div>
-        </div>
-
-        {errorUsuarios && <div className="alert error" style={{ marginTop: 12 }}>{errorUsuarios}</div>}
-
-        <div style={{ marginTop: 16, overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                {["ID", "Nombre", "Email", "Rol", ""].map((h) => (
-                  <th key={h} style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid var(--border)", color: "var(--muted)", fontWeight: 600 }}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {usuarios.map((u) => (
-                <tr key={u.id}>
-                  <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{u.id}</td>
-                  <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{u.nombre}</td>
-                  <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{u.email}</td>
-                  <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)", fontWeight: 600 }}>{u.rol}</td>
-                  <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)", textAlign: "right" }}>
-                    <button
-                      className="btn danger"
-                      onClick={() => handleEliminarUsuario(u.id)}
-                      disabled={eliminandoUsuario === u.id}
-                    >
-                      {eliminandoUsuario === u.id ? "Eliminando..." : "Eliminar"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {!loadingUsuarios && usuarios.length === 0 && (
-                <tr>
-                  <td colSpan={5} style={{ padding: "12px 8px", color: "var(--muted)" }}>
-                    Sin resultados
-                  </td>
-                </tr>
-              )}
-              {loadingUsuarios && (
-                <tr>
-                  <td colSpan={5} style={{ padding: "12px 8px", color: "var(--muted)" }}>
-                    Cargando...
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
         </div>
       </section>
     );
