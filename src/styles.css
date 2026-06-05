@@ -386,55 +386,95 @@ input[type="date"]::-moz-calendar-picker-indicator{
   background-size: 15px 15px;
   border-bottom: 2px solid var(--board-darker);
 }
+.nav.nav-home .nav-inner{
+  max-width:none;
+  min-height:64px;
+  padding:10px;
+  gap:clamp(10px, 1.6vw, 24px);
+  justify-content:space-between;
+}
+.nav.nav-home .spacer{
+  display:none;
+}
 .nav.nav-home .brand {
   color: var(--board-darker);
+  padding:8px 0;
+  font-size:25px;
+  font-weight:900;
 }
 .nav.nav-home a, .nav.nav-home button.link {
-  color: #333;
+  display:inline-flex;
+  align-items:center;
+  color: #111;
+  border-radius:14px;
+  font-weight:700;
 }
 .nav.nav-home a.active, .nav.nav-home a:hover, .nav.nav-home button.link:hover {
   color: #000;
   border-color: var(--board-darker);
   background: rgba(0,0,0,0.05);
 }
-.nav.nav-home a.active {
-  background-color: #f4c430;
-  background-image: none;
-  box-shadow: 3px 3px 0 rgba(17,17,17,.88);
+.nav.nav-home a.active:not(.brand):not(.nav-btn-login) {
+  gap:8px;
+  padding:10px 14px;
+  color:#ffd22a;
+  background:#07101b;
+  border:3px solid #111;
+  border-radius:12px;
+  box-shadow:
+    5px 5px 0 rgba(17,17,17,.92),
+    inset 0 0 0 1px rgba(255,210,42,.35);
+}
+.nav.nav-home a.active:not(.brand):not(.nav-btn-login)::before{
+  content:"★";
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:24px;
+  height:24px;
+  flex:0 0 auto;
+  color:#07101b;
+  background:#f2bd1a;
+  border:2px solid #111;
+  border-radius:50%;
+  font-size:14px;
+  line-height:1;
 }
 .nav.nav-home .badge {
   border-color: var(--board-dark);
   color: var(--board-darker);
 }
 .nav.nav-home .nav-user{
-  gap:0;
-  padding:4px;
-  background:#f4c430;
+  gap:8px;
+  padding:6px 8px;
+  background:#07101b;
   border:3px solid var(--board-darker);
   border-radius:999px;
-  box-shadow:3px 3px 0 rgba(17,17,17,.88);
+  box-shadow:
+    5px 5px 0 rgba(17,17,17,.92),
+    inset 0 0 0 1px rgba(255,210,42,.35);
 }
 .nav.nav-home .nav-user-avatar{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  width:28px;
-  height:28px;
+  width:32px;
+  height:32px;
   color:#111;
   background:linear-gradient(180deg, #ffcf45, #d99d16);
   border:2px solid var(--board-darker);
   border-radius:50%;
-  font-size:13px;
+  font-size:15px;
   font-weight:900;
 }
 .nav.nav-home .nav-user-email{
   max-width:180px;
   overflow:hidden;
-  padding:0 12px;
+  padding:0 8px 0 0;
   border:0;
-  color:#111;
-  font-size:12px;
-  font-weight:800;
+  color:#ffd22a;
+  font-size:13px;
+  font-weight:900;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
@@ -458,11 +498,11 @@ input[type="date"]::-moz-calendar-picker-indicator{
   background: #ffdc5f;
 }
 .nav.nav-home .nav-btn-logout {
-  background: var(--board-darker);
-  border: 2px solid var(--board-darker);
+  background:#101010;
+  border:2px solid #d3a000;
   border-radius:999px;
   color:#f8e1a5;
-  padding:6px 14px;
+  padding:8px 18px;
   cursor:pointer;
   font-weight:900;
 }
@@ -978,6 +1018,164 @@ input[type="date"]::-moz-calendar-picker-indicator{
   font-size:12px;
 }
 
+/* Mis reservas */
+.my-reservations-page{
+  position:relative;
+  width:100vw;
+  min-height:calc(100vh - 48px);
+  margin:-24px calc(50% - 50vw) 0;
+  padding:30px 24px 56px;
+  color:#f7f7f7;
+  background:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px),
+    radial-gradient(circle at 50% -16%, rgba(255,196,48,0.1), transparent 34%),
+    #090909;
+  background-size:18px 18px, 18px 18px, auto, auto;
+}
+.my-reservations-shell{
+  position:relative;
+  z-index:1;
+  max-width:1080px;
+  margin:0 auto;
+}
+.my-reservations-heading{
+  margin-bottom:22px;
+}
+.my-reservations-title{
+  padding-inline:52px;
+  box-shadow:
+    0 12px 0 #241100,
+    0 24px 36px rgba(0,0,0,.5),
+    inset 0 2px 0 rgba(255,255,255,.28),
+    inset 0 -6px 12px rgba(0,0,0,.18);
+}
+.my-reservations-heading p{
+  margin-top:20px;
+  color:#e4e7ec;
+  font-size:15px;
+  text-align:center;
+  text-shadow:0 2px 10px rgba(0,0,0,.8);
+}
+.my-reservations-alert{
+  max-width:980px;
+  margin:0 auto 14px;
+}
+.my-reservations-panel{
+  max-width:980px;
+  margin:0 auto;
+  padding:20px;
+  background:linear-gradient(180deg, rgba(5,19,36,.86), rgba(4,14,28,.94));
+  border:1px solid #b76d00;
+  border-radius:24px;
+  box-shadow:
+    0 22px 46px rgba(0,0,0,.45),
+    inset 0 0 0 1px rgba(255,195,35,.18);
+}
+.my-reservations-list{
+  display:grid;
+  gap:12px;
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+.my-reservation-row{
+  display:grid;
+  grid-template-columns:52px 56px 8px minmax(86px, .7fr) 8px minmax(220px, 1.5fr) minmax(142px, auto) minmax(118px, auto);
+  align-items:center;
+  gap:18px;
+  min-height:74px;
+  padding:12px 18px;
+  background:linear-gradient(180deg, rgba(8,27,49,.94), rgba(5,18,34,.96));
+  border:1px solid rgba(120,144,168,.22);
+  border-left:1px solid rgba(246,177,21,.75);
+  border-radius:10px;
+  box-shadow:
+    0 12px 26px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.06);
+}
+.my-reservation-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:42px;
+  height:42px;
+  color:#ffd014;
+  background:rgba(3,15,30,.88);
+  border:1px solid rgba(255,208,20,.18);
+  border-radius:50%;
+}
+.my-reservation-icon svg,
+.my-reservation-status svg,
+.my-reservation-cancel svg{
+  width:20px;
+  height:20px;
+}
+.my-reservation-id{
+  color:#f8fafc;
+  font-size:22px;
+  line-height:1;
+}
+.my-reservation-table,
+.my-reservation-time{
+  color:#eef2f7;
+  font-size:16px;
+  white-space:nowrap;
+}
+.my-reservation-dot{
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:#ffcc16;
+}
+.my-reservation-status{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  justify-self:start;
+  min-width:138px;
+  min-height:36px;
+  padding:0 16px;
+  color:#ffcf16;
+  border:1px solid #d5a300;
+  border-radius:999px;
+  background:rgba(3,15,30,.86);
+  font-size:13px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+.my-reservation-status.status-cancelado{
+  color:#d9d9d9;
+  border-color:#9a9a9a;
+}
+.my-reservation-cancel{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  justify-self:end;
+  min-width:118px;
+  min-height:36px;
+  padding:0 16px;
+  color:#ff382f;
+  background:rgba(14,15,22,.88);
+  border:1px solid #ff241d;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:900;
+}
+.my-reservation-cancel:hover{
+  background:rgba(255,36,29,.12);
+}
+.my-reservations-state{
+  margin:0;
+  padding:24px;
+  color:#d9e2ef;
+  text-align:center;
+}
+
 @media(max-width:900px){
   .games-filters{
     grid-template-columns:1fr 1fr;
@@ -1004,6 +1202,26 @@ input[type="date"]::-moz-calendar-picker-indicator{
   .reservation-panel{
     grid-template-columns:1fr;
     padding:20px;
+  }
+  .my-reservation-row{
+    grid-template-columns:46px 54px minmax(0, 1fr) auto;
+    gap:12px;
+  }
+  .my-reservation-dot{
+    display:none;
+  }
+  .my-reservation-table,
+  .my-reservation-time{
+    white-space:normal;
+  }
+  .my-reservation-time{
+    grid-column:3 / -1;
+  }
+  .my-reservation-status{
+    grid-column:3 / 4;
+  }
+  .my-reservation-cancel{
+    grid-column:4 / 5;
   }
 }
 
@@ -1042,6 +1260,46 @@ input[type="date"]::-moz-calendar-picker-indicator{
   }
   .reservation-action{
     flex:1 1 140px;
+  }
+  .my-reservations-page{
+    padding:18px 14px 38px;
+  }
+  .my-reservations-title{
+    padding-inline:18px;
+  }
+  .my-reservations-title h1{
+    font-size:25px;
+  }
+  .my-reservations-heading p{
+    font-size:13px;
+  }
+  .my-reservations-panel{
+    padding:12px;
+    border-radius:16px;
+  }
+  .my-reservation-row{
+    grid-template-columns:42px minmax(0, 1fr);
+    gap:8px 12px;
+    padding:12px;
+  }
+  .my-reservation-id,
+  .my-reservation-table,
+  .my-reservation-time,
+  .my-reservation-status,
+  .my-reservation-cancel{
+    grid-column:2 / -1;
+    justify-self:start;
+  }
+  .my-reservation-id{
+    font-size:20px;
+  }
+  .my-reservation-table,
+  .my-reservation-time{
+    font-size:14px;
+  }
+  .my-reservation-status,
+  .my-reservation-cancel{
+    width:100%;
   }
   .games-filters{
     grid-template-columns:1fr;
