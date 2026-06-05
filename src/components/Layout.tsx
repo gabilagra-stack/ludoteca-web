@@ -8,7 +8,12 @@ export default function Layout() {
   const location = useLocation();
   const isHome = location.pathname === "/";
   const isLogin = location.pathname === "/login";
-  const useBoardNav = isHome || isLogin || location.pathname.startsWith("/juegos-para-");
+  const useBoardNav =
+    isHome ||
+    isLogin ||
+    location.pathname.startsWith("/juegos-para-") ||
+    location.pathname === "/reservar" ||
+    location.pathname === "/mis-reservas";
   const userInitial = user?.email?.charAt(0).toUpperCase() ?? "U";
 
   return (
