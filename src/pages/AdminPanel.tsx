@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { eliminarUsuario, listarUsuarios, type Usuario } from "../api/usuarios.api";
 import { crearMesa, eliminarMesa, listarMesas, type Mesa } from "../api/mesas.api";
 import {
@@ -13,6 +13,7 @@ import {
 } from "../api/turnos.api";
 import { listarReservasAdmin, cancelarReserva, type ReservaResponseDto } from "../api/reservas.api";
 import {
+  JUEGOS_PARA_JUGAR_PAGE_SIZE,
   listarJuegosParaJugar,
   listarJuegosParaVender,
   crearJuegoParaJugar,
@@ -27,6 +28,7 @@ import { parseApiError } from "../api/api-error";
 type FiltrosUsuarios = { nombre: string; email: string; rol: string };
 type FiltrosMesas = { numero: string; capacidad: string };
 type Vista = "menu" | "usuarios" | "mesas" | "turnos" | "juegos" | "reservas";
+type PaginationItem = number | "ellipsis";
 
 type AdminMenuItem = {
   vista: Exclude<Vista, "menu">;
@@ -179,6 +181,61 @@ function TrashIcon() {
   );
 }
 
+function NumberIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M4 9h16" />
+      <path d="M4 15h16" />
+      <path d="M10 3 8 21" />
+      <path d="m16 3-2 18" />
+    </svg>
+  );
+}
+
+function CapacityIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="9" cy="8" r="3" />
+      <circle cx="17" cy="9" r="2.5" />
+      <path d="M3 21a6 6 0 0 1 12 0" />
+      <path d="M14 21a5 5 0 0 1 8 0" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+
+function ChevronIcon({ direction }: { direction: "prev" | "next" }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      {direction === "prev" ? <path d="m15 18-6-6 6-6" /> : <path d="m9 18 6-6-6-6" />}
+    </svg>
+  );
+}
+
+function getPaginationItems(currentPage: number, totalPages: number): PaginationItem[] {
+  if (totalPages <= 5) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  if (currentPage <= 3) {
+    return [1, 2, 3, "ellipsis", totalPages];
+  }
+
+  if (currentPage >= totalPages - 2) {
+    return [1, "ellipsis", totalPages - 2, totalPages - 1, totalPages];
+  }
+
+  return [1, "ellipsis", currentPage, "ellipsis", totalPages];
+}
+
 function RoleIcon({ role }: { role: string }) {
   return role === "ADMIN" ? <ShieldIcon /> : <UserIcon />;
 }
@@ -223,6 +280,8 @@ export default function AdminPanel() {
   const [juegosVender, setJuegosVender] = useState<JuegoParaVender[]>([]);
   const [loadingJuegos, setLoadingJuegos] = useState(false);
   const [errorJuegos, setErrorJuegos] = useState<string | null>(null);
+  const [pageJugar, setPageJugar] = useState(1);
+  const [pageVender, setPageVender] = useState(1);
   const [filtrosJugar, setFiltrosJugar] = useState<{ nombre: string; categoria: string; dificultad: string; jugadoresMax: string }>({
     nombre: "",
     categoria: "",
@@ -258,6 +317,18 @@ export default function AdminPanel() {
     stock: "",
   });
   const [eliminandoJuego, setEliminandoJuego] = useState<{ tipo: "jugar" | "vender"; id: number } | null>(null);
+  const totalPagesJugar = Math.max(1, Math.ceil(juegosJugar.length / JUEGOS_PARA_JUGAR_PAGE_SIZE));
+  const totalPagesVender = Math.max(1, Math.ceil(juegosVender.length / JUEGOS_PARA_JUGAR_PAGE_SIZE));
+  const visibleJuegosJugar = useMemo(() => {
+    const start = (pageJugar - 1) * JUEGOS_PARA_JUGAR_PAGE_SIZE;
+    return juegosJugar.slice(start, start + JUEGOS_PARA_JUGAR_PAGE_SIZE);
+  }, [juegosJugar, pageJugar]);
+  const visibleJuegosVender = useMemo(() => {
+    const start = (pageVender - 1) * JUEGOS_PARA_JUGAR_PAGE_SIZE;
+    return juegosVender.slice(start, start + JUEGOS_PARA_JUGAR_PAGE_SIZE);
+  }, [juegosVender, pageVender]);
+  const paginationItemsJugar = getPaginationItems(pageJugar, totalPagesJugar);
+  const paginationItemsVender = getPaginationItems(pageVender, totalPagesVender);
 
   // Reservas
   const [reservas, setReservas] = useState<ReservaResponseDto[]>([]);
@@ -386,6 +457,24 @@ export default function AdminPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vista]);
 
+  useEffect(() => {
+    if (vista === "turnos") fetchTurnos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vistaTurnoTab]);
+
+  useEffect(() => {
+    if (vista === "juegos") fetchJuegos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vistaJuegoTab]);
+
+  useEffect(() => {
+    setPageJugar((currentPage) => Math.min(currentPage, totalPagesJugar));
+  }, [totalPagesJugar]);
+
+  useEffect(() => {
+    setPageVender((currentPage) => Math.min(currentPage, totalPagesVender));
+  }, [totalPagesVender]);
+
   async function handleEliminarUsuario(id: number) {
     const confirmar = window.confirm("Eliminar usuario? Esta accion no se puede deshacer.");
     if (!confirmar) return;
@@ -456,6 +545,7 @@ export default function AdminPanel() {
         cantidadDisponible: "",
       });
       setJuegosJugar((prev) => [creado, ...prev]);
+      setPageJugar(1);
       setVistaJuegoTab("jugar");
     } catch (err: any) {
       const { message } = parseApiError(err, "No se pudo crear el juego");
@@ -488,6 +578,7 @@ export default function AdminPanel() {
         stock: "",
       });
       setJuegosVender((prev) => [creado, ...prev]);
+      setPageVender(1);
       setVistaJuegoTab("vender");
     } catch (err: any) {
       const { message } = parseApiError(err, "No se pudo crear el juego");
@@ -773,185 +864,222 @@ export default function AdminPanel() {
 
   if (vista === "mesas") {
     return (
-    <section className="card">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button className="btn ghost" onClick={() => setVista("menu")}>{"<"}- Volver</button>
-          <div>
-            <h2 style={{ margin: 0 }}>Mesas</h2>
-            <p className="sub" style={{ margin: 0 }}>Gestiona mesas y capacidad.</p>
+      <section className="admin-mesas-page">
+        <div className="admin-mesas-shell">
+          <header className="games-heading admin-mesas-heading">
+            <div className="board-page-title admin-mesas-title">
+              <span className="title-icon">🎲</span>
+              <h1>Gestión de mesas</h1>
+              <span className="title-icon">🎲</span>
+            </div>
+            <p>Gestioná mesas y capacidad.</p>
+          </header>
+
+          <div className="admin-mesas-panel">
+            <div className="admin-mesas-toolbar">
+              <button className="admin-mesas-back" onClick={() => setVista("menu")}>
+                <BackIcon />
+                Volver
+              </button>
+              <button className="admin-mesas-refresh" onClick={fetchMesas} disabled={loadingMesas}>
+                <RefreshIcon />
+                {loadingMesas ? "Actualizando..." : "Refrescar"}
+              </button>
+            </div>
+
+            <form onSubmit={handleCrearMesa} className="admin-mesas-form">
+              <label className="admin-mesas-field">
+                <span>Número</span>
+                <div className="admin-mesas-input-wrap">
+                  <NumberIcon />
+                  <input
+                    className="admin-mesas-input"
+                    type="number"
+                    min={1}
+                    placeholder="Ej: 5"
+                    value={nuevaMesa.numero}
+                    onChange={(e) => setNuevaMesa((m) => ({ ...m, numero: e.target.value }))}
+                    required
+                  />
+                </div>
+              </label>
+
+              <label className="admin-mesas-field">
+                <span>Capacidad</span>
+                <div className="admin-mesas-input-wrap">
+                  <CapacityIcon />
+                  <input
+                    className="admin-mesas-input"
+                    type="number"
+                    min={1}
+                    placeholder="Ej: 4"
+                    value={nuevaMesa.capacidad}
+                    onChange={(e) => setNuevaMesa((m) => ({ ...m, capacidad: e.target.value }))}
+                    required
+                  />
+                </div>
+              </label>
+
+              <div className="admin-mesas-actions">
+                <button className="admin-mesas-apply" type="submit" disabled={creandoMesa}>
+                  <PlusIcon />
+                  {creandoMesa ? "Creando..." : "Crear mesa"}
+                </button>
+                <button
+                  className="admin-mesas-clear"
+                  type="button"
+                  onClick={() => setNuevaMesa({ numero: "", capacidad: "" })}
+                >
+                  <BroomIcon />
+                  Limpiar
+                </button>
+              </div>
+            </form>
+
+            <div className="admin-mesas-filters">
+              <label className="admin-mesas-field">
+                <span>Número</span>
+                <div className="admin-mesas-input-wrap">
+                  <NumberIcon />
+                  <input
+                    className="admin-mesas-input"
+                    type="number"
+                    placeholder="Filtrar por número"
+                    value={filtrosMesas.numero}
+                    onChange={(e) => setFiltrosMesas((f) => ({ ...f, numero: e.target.value }))}
+                  />
+                </div>
+              </label>
+
+              <label className="admin-mesas-field">
+                <span>Capacidad</span>
+                <div className="admin-mesas-input-wrap">
+                  <CapacityIcon />
+                  <input
+                    className="admin-mesas-input"
+                    type="number"
+                    placeholder="Filtrar por capacidad"
+                    value={filtrosMesas.capacidad}
+                    onChange={(e) => setFiltrosMesas((f) => ({ ...f, capacidad: e.target.value }))}
+                  />
+                </div>
+              </label>
+
+              <div className="admin-mesas-actions">
+                <button className="admin-mesas-apply" type="button" onClick={fetchMesas} disabled={loadingMesas}>
+                  <FilterIcon />
+                  {loadingMesas ? "Buscando..." : "Aplicar filtros"}
+                </button>
+                <button
+                  className="admin-mesas-clear"
+                  type="button"
+                  onClick={() => {
+                    setFiltrosMesas({ numero: "", capacidad: "" });
+                    setTimeout(fetchMesas, 0);
+                  }}
+                >
+                  <BroomIcon />
+                  Limpiar
+                </button>
+              </div>
+            </div>
+
+            {errorMesas && <div className="alert error admin-mesas-alert">{errorMesas}</div>}
+
+            <div className="admin-mesas-table-wrap">
+              <table className="admin-mesas-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Número</th>
+                    <th>Capacidad</th>
+                    <th>Disponible</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mesas.map((m) => (
+                    <tr key={m.id}>
+                      <td>{m.id}</td>
+                      <td>{m.numero}</td>
+                      <td>{m.capacidad}</td>
+                      <td>
+                        <span className={`admin-mesas-status ${m.disponible ? "is-available" : "is-unavailable"}`}>
+                          {m.disponible ? "Sí" : "No"}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className="admin-mesas-delete"
+                          onClick={() => handleEliminarMesa(m.id)}
+                          disabled={eliminandoMesa === m.id}
+                        >
+                          <TrashIcon />
+                          {eliminandoMesa === m.id ? "Eliminando..." : "Eliminar"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {!loadingMesas && mesas.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="admin-mesas-state">
+                        Sin resultados
+                      </td>
+                    </tr>
+                  )}
+                  {loadingMesas && (
+                    <tr>
+                      <td colSpan={5} className="admin-mesas-state">
+                        Cargando...
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-        <button className="btn ghost" onClick={fetchMesas} disabled={loadingMesas}>
-          {loadingMesas ? "Actualizando..." : "Refrescar"}
-        </button>
-      </div>
-
-      <form onSubmit={handleCrearMesa} className="row" style={{ marginTop: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
-        <div style={{ flex: 1, minWidth: 140 }}>
-          <label className="label">Numero</label>
-          <input
-            className="input"
-            type="number"
-            min={1}
-            placeholder="Ej: 5"
-            value={nuevaMesa.numero}
-            onChange={(e) => setNuevaMesa((m) => ({ ...m, numero: e.target.value }))}
-            required
-          />
-        </div>
-        <div style={{ flex: 1, minWidth: 140 }}>
-          <label className="label">Capacidad</label>
-          <input
-            className="input"
-            type="number"
-            min={1}
-            placeholder="Ej: 4"
-            value={nuevaMesa.capacidad}
-            onChange={(e) => setNuevaMesa((m) => ({ ...m, capacidad: e.target.value }))}
-            required
-          />
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button className="btn primary" type="submit" disabled={creandoMesa}>
-            {creandoMesa ? "Creando..." : "Crear mesa"}
-          </button>
-          <button
-            className="btn ghost"
-            type="button"
-            onClick={() => setNuevaMesa({ numero: "", capacidad: "" })}
-          >
-            Limpiar
-          </button>
-        </div>
-      </form>
-
-      <div className="row" style={{ marginTop: 16, flexWrap: "wrap" }}>
-        <div style={{ flex: 1, minWidth: 140 }}>
-          <label className="label">Numero</label>
-          <input
-            className="input"
-            type="number"
-            placeholder="Filtrar por numero"
-            value={filtrosMesas.numero}
-            onChange={(e) => setFiltrosMesas((f) => ({ ...f, numero: e.target.value }))}
-          />
-        </div>
-        <div style={{ flex: 1, minWidth: 140 }}>
-          <label className="label">Capacidad</label>
-          <input
-            className="input"
-            type="number"
-            placeholder="Filtrar por capacidad"
-            value={filtrosMesas.capacidad}
-            onChange={(e) => setFiltrosMesas((f) => ({ ...f, capacidad: e.target.value }))}
-          />
-        </div>
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-          <button className="btn primary" type="button" onClick={fetchMesas} disabled={loadingMesas}>
-            {loadingMesas ? "Buscando..." : "Aplicar filtros"}
-          </button>
-          <button
-            className="btn ghost"
-            type="button"
-            onClick={() => {
-              setFiltrosMesas({ numero: "", capacidad: "" });
-              setTimeout(fetchMesas, 0);
-            }}
-          >
-            Limpiar
-          </button>
-        </div>
-      </div>
-
-      {errorMesas && <div className="alert error" style={{ marginTop: 12 }}>{errorMesas}</div>}
-
-      <div style={{ marginTop: 16, overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              {["ID", "Numero", "Capacidad", "Disponible", ""].map((h) => (
-                <th key={h} style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid var(--border)", color: "var(--muted)", fontWeight: 600 }}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {mesas.map((m) => (
-              <tr key={m.id}>
-                <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{m.id}</td>
-                <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{m.numero}</td>
-                <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{m.capacidad}</td>
-                <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>
-                  {m.disponible ? "Si" : "No"}
-                </td>
-                <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)", textAlign: "right" }}>
-                  <button
-                    className="btn danger"
-                    onClick={() => handleEliminarMesa(m.id)}
-                    disabled={eliminandoMesa === m.id}
-                  >
-                    {eliminandoMesa === m.id ? "Eliminando..." : "Eliminar"}
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {!loadingMesas && mesas.length === 0 && (
-              <tr>
-                <td colSpan={5} style={{ padding: "12px 8px", color: "var(--muted)" }}>
-                  Sin resultados
-                </td>
-              </tr>
-            )}
-            {loadingMesas && (
-              <tr>
-                <td colSpan={5} style={{ padding: "12px 8px", color: "var(--muted)" }}>
-                  Cargando...
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </section>
+      </section>
     );
   }
 
   if (vista === "juegos") {
     return (
-      <section className="card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button className="btn ghost" onClick={() => setVista("menu")}>{"<"}- Volver</button>
-            <div>
-              <h2 style={{ margin: 0 }}>Juegos</h2>
-              <p className="sub" style={{ margin: 0 }}>Catalogo para jugar o vender.</p>
+      <section className="admin-board-page">
+        <div className="admin-board-shell">
+          <header className="games-heading admin-board-heading">
+            <div className="board-page-title admin-board-title">
+              <span className="title-icon">🎲</span>
+              <h1>Gestión de juegos</h1>
+              <span className="title-icon">🎲</span>
             </div>
-          </div>
-          <button className="btn ghost" onClick={fetchJuegos} disabled={loadingJuegos}>
-            {loadingJuegos ? "Actualizando..." : "Refrescar"}
-          </button>
-        </div>
+            <p>Catálogo para jugar o vender.</p>
+          </header>
 
-        <div className="row" style={{ gap: 10, marginTop: 16, flexWrap: "wrap", borderBottom: "1px solid var(--border)", paddingBottom: 12 }}>
+          <div className="admin-board-panel">
+            <div className="admin-board-toolbar">
+              <button className="admin-board-button ghost" onClick={() => setVista("menu")}>
+                <BackIcon />
+                Volver
+              </button>
+              <button className="admin-board-button ghost" onClick={fetchJuegos} disabled={loadingJuegos}>
+                <RefreshIcon />
+                {loadingJuegos ? "Actualizando..." : "Refrescar"}
+              </button>
+            </div>
+
+        <div className="admin-board-tabs">
           <button
-            className={`btn ${vistaJuegoTab === "jugar" ? "primary" : "ghost"}`}
+            className={`admin-board-tab ${vistaJuegoTab === "jugar" ? "is-active" : ""}`}
             type="button"
-            onClick={() => {
-              setVistaJuegoTab("jugar");
-              fetchJuegos();
-            }}
+            onClick={() => setVistaJuegoTab("jugar")}
           >
             Para jugar
           </button>
           <button
-            className={`btn ${vistaJuegoTab === "vender" ? "primary" : "ghost"}`}
+            className={`admin-board-tab ${vistaJuegoTab === "vender" ? "is-active" : ""}`}
             type="button"
-            onClick={() => {
-              setVistaJuegoTab("vender");
-              fetchJuegos();
-            }}
+            onClick={() => setVistaJuegoTab("vender")}
           >
             Para vender
           </button>
@@ -992,7 +1120,10 @@ export default function AdminPanel() {
                   <input className="input" placeholder="Ej: 60-90 min" value={nuevoJuegoJugar.duracionAproximada} onChange={(e) => setNuevoJuegoJugar((v) => ({ ...v, duracionAproximada: e.target.value }))} />
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button className="btn primary" type="submit" disabled={loadingJuegos}>{loadingJuegos ? "Creando..." : "Crear juego"}</button>
+                  <button className="btn primary" type="submit" disabled={loadingJuegos}>
+                    <PlusIcon />
+                    {loadingJuegos ? "Creando..." : "Crear juego"}
+                  </button>
                   <button className="btn ghost" type="button" onClick={() => setNuevoJuegoJugar({
                     nombre: "",
                     descripcion: "",
@@ -1002,7 +1133,10 @@ export default function AdminPanel() {
                     categoria: "",
                     duracionAproximada: "",
                     cantidadDisponible: "",
-                  })}>Limpiar</button>
+                  })}>
+                    <BroomIcon />
+                    Limpiar
+                  </button>
                 </div>
               </form>
             </div>
@@ -1031,10 +1165,12 @@ export default function AdminPanel() {
                 <input className="input" type="number" min={1} value={filtrosJugar.jugadoresMax} onChange={(e) => setFiltrosJugar((f) => ({ ...f, jugadoresMax: e.target.value }))} />
               </div>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-                <button className="btn primary" type="button" onClick={fetchJuegos} disabled={loadingJuegos}>
+                <button className="btn primary" type="button" onClick={() => { setPageJugar(1); fetchJuegos(); }} disabled={loadingJuegos}>
+                  <FilterIcon />
                   {loadingJuegos ? "Buscando..." : "Aplicar filtros"}
                 </button>
-                <button className="btn ghost" type="button" onClick={() => { setFiltrosJugar({ nombre: "", categoria: "", dificultad: "", jugadoresMax: "" }); setTimeout(fetchJuegos, 0); }}>
+                <button className="btn ghost" type="button" onClick={() => { setFiltrosJugar({ nombre: "", categoria: "", dificultad: "", jugadoresMax: "" }); setPageJugar(1); setTimeout(fetchJuegos, 0); }}>
+                  <BroomIcon />
                   Limpiar
                 </button>
               </div>
@@ -1044,7 +1180,7 @@ export default function AdminPanel() {
 
             <div className="card" style={{ marginTop: 12, background: "rgba(17,26,46,.6)", border: "1px solid var(--border)", boxShadow: "0 10px 30px rgba(0,0,0,.25)" }}>
               <div className="list">
-                {juegosJugar.map((j) => (
+                {visibleJuegosJugar.map((j) => (
                   <div key={j.id} className="item" style={{ justifyContent: "space-between" }}>
                     <div>
                       <strong>{j.nombre}</strong>
@@ -1054,6 +1190,7 @@ export default function AdminPanel() {
                       <div className="hint">Disponibles: {j.cantidadDisponible ?? "-"}</div>
                     </div>
                     <button className="btn danger" onClick={() => handleEliminarJuego("jugar", j.id)} disabled={eliminandoJuego?.tipo === "jugar" && eliminandoJuego.id === j.id}>
+                      <TrashIcon />
                       {eliminandoJuego?.tipo === "jugar" && eliminandoJuego.id === j.id ? "Eliminando..." : "Eliminar"}
                     </button>
                   </div>
@@ -1065,6 +1202,43 @@ export default function AdminPanel() {
                   <div className="item"><span className="hint">Cargando...</span></div>
                 )}
               </div>
+              {juegosJugar.length > JUEGOS_PARA_JUGAR_PAGE_SIZE && (
+                <nav className="admin-board-pagination games-pagination" aria-label="Paginado de juegos para jugar admin">
+                  <button
+                    type="button"
+                    className="games-page-button icon"
+                    disabled={pageJugar === 1}
+                    onClick={() => setPageJugar((currentPage) => Math.max(1, currentPage - 1))}
+                    aria-label="Página anterior"
+                  >
+                    <ChevronIcon direction="prev" />
+                  </button>
+                  {paginationItemsJugar.map((item, index) =>
+                    item === "ellipsis" ? (
+                      <span key={`jugar-ellipsis-${index}`} className="games-page-ellipsis">...</span>
+                    ) : (
+                      <button
+                        key={item}
+                        type="button"
+                        className={`games-page-button ${pageJugar === item ? "active" : ""}`}
+                        onClick={() => setPageJugar(item)}
+                        aria-current={pageJugar === item ? "page" : undefined}
+                      >
+                        {item}
+                      </button>
+                    ),
+                  )}
+                  <button
+                    type="button"
+                    className="games-page-button icon"
+                    disabled={pageJugar === totalPagesJugar}
+                    onClick={() => setPageJugar((currentPage) => Math.min(totalPagesJugar, currentPage + 1))}
+                    aria-label="Página siguiente"
+                  >
+                    <ChevronIcon direction="next" />
+                  </button>
+                </nav>
+              )}
             </div>
           </>
         ) : (
@@ -1106,7 +1280,10 @@ export default function AdminPanel() {
                   <input className="input" placeholder="Ej: 60-90 min" value={nuevoJuegoVender.duracionAproximada} onChange={(e) => setNuevoJuegoVender((v) => ({ ...v, duracionAproximada: e.target.value }))} />
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button className="btn primary" type="submit" disabled={loadingJuegos}>{loadingJuegos ? "Creando..." : "Crear juego"}</button>
+                  <button className="btn primary" type="submit" disabled={loadingJuegos}>
+                    <PlusIcon />
+                    {loadingJuegos ? "Creando..." : "Crear juego"}
+                  </button>
                   <button className="btn ghost" type="button" onClick={() => setNuevoJuegoVender({
                     nombre: "",
                     descripcion: "",
@@ -1117,7 +1294,10 @@ export default function AdminPanel() {
                     duracionAproximada: "",
                     precio: "",
                     stock: "",
-                  })}>Limpiar</button>
+                  })}>
+                    <BroomIcon />
+                    Limpiar
+                  </button>
                 </div>
               </form>
             </div>
@@ -1150,10 +1330,12 @@ export default function AdminPanel() {
                 <input className="input" type="number" min={0} value={filtrosVender.stock} onChange={(e) => setFiltrosVender((f) => ({ ...f, stock: e.target.value }))} />
               </div>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-                <button className="btn primary" type="button" onClick={fetchJuegos} disabled={loadingJuegos}>
+                <button className="btn primary" type="button" onClick={() => { setPageVender(1); fetchJuegos(); }} disabled={loadingJuegos}>
+                  <FilterIcon />
                   {loadingJuegos ? "Buscando..." : "Aplicar filtros"}
                 </button>
-                <button className="btn ghost" type="button" onClick={() => { setFiltrosVender({ nombre: "", categoria: "", dificultad: "", jugadoresMax: "", stock: "" }); setTimeout(fetchJuegos, 0); }}>
+                <button className="btn ghost" type="button" onClick={() => { setFiltrosVender({ nombre: "", categoria: "", dificultad: "", jugadoresMax: "", stock: "" }); setPageVender(1); setTimeout(fetchJuegos, 0); }}>
+                  <BroomIcon />
                   Limpiar
                 </button>
               </div>
@@ -1163,7 +1345,7 @@ export default function AdminPanel() {
 
             <div className="card" style={{ marginTop: 12, background: "rgba(17,26,46,.6)", border: "1px solid var(--border)", boxShadow: "0 10px 30px rgba(0,0,0,.25)" }}>
               <div className="list">
-                {juegosVender.map((j) => (
+                {visibleJuegosVender.map((j) => (
                   <div key={j.id} className="item" style={{ justifyContent: "space-between" }}>
                     <div>
                       <strong>{j.nombre}</strong>
@@ -1173,6 +1355,7 @@ export default function AdminPanel() {
                       <div className="hint">Precio: {j.precio ?? "-"} · Stock: {j.stock ?? "-"}</div>
                     </div>
                     <button className="btn danger" onClick={() => handleEliminarJuego("vender", j.id)} disabled={eliminandoJuego?.tipo === "vender" && eliminandoJuego.id === j.id}>
+                      <TrashIcon />
                       {eliminandoJuego?.tipo === "vender" && eliminandoJuego.id === j.id ? "Eliminando..." : "Eliminar"}
                     </button>
                   </div>
@@ -1184,28 +1367,76 @@ export default function AdminPanel() {
                   <div className="item"><span className="hint">Cargando...</span></div>
                 )}
               </div>
+              {juegosVender.length > JUEGOS_PARA_JUGAR_PAGE_SIZE && (
+                <nav className="admin-board-pagination games-pagination" aria-label="Paginado de juegos para vender admin">
+                  <button
+                    type="button"
+                    className="games-page-button icon"
+                    disabled={pageVender === 1}
+                    onClick={() => setPageVender((currentPage) => Math.max(1, currentPage - 1))}
+                    aria-label="Página anterior"
+                  >
+                    <ChevronIcon direction="prev" />
+                  </button>
+                  {paginationItemsVender.map((item, index) =>
+                    item === "ellipsis" ? (
+                      <span key={`vender-ellipsis-${index}`} className="games-page-ellipsis">...</span>
+                    ) : (
+                      <button
+                        key={item}
+                        type="button"
+                        className={`games-page-button ${pageVender === item ? "active" : ""}`}
+                        onClick={() => setPageVender(item)}
+                        aria-current={pageVender === item ? "page" : undefined}
+                      >
+                        {item}
+                      </button>
+                    ),
+                  )}
+                  <button
+                    type="button"
+                    className="games-page-button icon"
+                    disabled={pageVender === totalPagesVender}
+                    onClick={() => setPageVender((currentPage) => Math.min(totalPagesVender, currentPage + 1))}
+                    aria-label="Página siguiente"
+                  >
+                    <ChevronIcon direction="next" />
+                  </button>
+                </nav>
+              )}
             </div>
           </>
         )}
+          </div>
+        </div>
       </section>
     );
   }
 
   if (vista === "reservas") {
     return (
-      <section className="card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button className="btn ghost" onClick={() => setVista("menu")}>{"<"}- Volver</button>
-            <div>
-              <h2 style={{ margin: 0 }}>Reservas</h2>
-              <p className="sub" style={{ margin: 0 }}>Consulta y cancela reservas (solo ADMIN).</p>
+      <section className="admin-board-page">
+        <div className="admin-board-shell">
+          <header className="games-heading admin-board-heading">
+            <div className="board-page-title admin-board-title">
+              <span className="title-icon">🎲</span>
+              <h1>Gestión de reservas</h1>
+              <span className="title-icon">🎲</span>
             </div>
-          </div>
-          <button className="btn ghost" onClick={fetchReservas} disabled={loadingReservas}>
-            {loadingReservas ? "Actualizando..." : "Refrescar"}
-          </button>
-        </div>
+            <p>Consulta y cancela reservas.</p>
+          </header>
+
+          <div className="admin-board-panel">
+            <div className="admin-board-toolbar">
+              <button className="admin-board-button ghost" onClick={() => setVista("menu")}>
+                <BackIcon />
+                Volver
+              </button>
+              <button className="admin-board-button ghost" onClick={fetchReservas} disabled={loadingReservas}>
+                <RefreshIcon />
+                {loadingReservas ? "Actualizando..." : "Refrescar"}
+              </button>
+            </div>
 
         <div className="row" style={{ marginTop: 16, flexWrap: "wrap" }}>
           <div style={{ flex: 1, minWidth: 180 }}>
@@ -1252,6 +1483,7 @@ export default function AdminPanel() {
           </div>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
             <button className="btn primary" type="button" onClick={fetchReservas} disabled={loadingReservas}>
+              <FilterIcon />
               {loadingReservas ? "Buscando..." : "Aplicar filtros"}
             </button>
             <button
@@ -1262,6 +1494,7 @@ export default function AdminPanel() {
                 setTimeout(fetchReservas, 0);
               }}
             >
+              <BroomIcon />
               Limpiar
             </button>
           </div>
@@ -1286,6 +1519,7 @@ export default function AdminPanel() {
                     onClick={() => handleCancelarReserva(r.id)}
                     disabled={eliminandoReserva === r.id}
                   >
+                    <TrashIcon />
                     {eliminandoReserva === r.id ? "Cancelando..." : "Cancelar"}
                   </button>
                 ) : (
@@ -1301,44 +1535,49 @@ export default function AdminPanel() {
             )}
           </div>
         </div>
+          </div>
+        </div>
       </section>
     );
   }
 
   // Vista turnos
   return (
-    <section className="card">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button className="btn ghost" onClick={() => setVista("menu")}>{"<"}- Volver</button>
-          <div>
-            <h2 style={{ margin: 0 }}>Turnos</h2>
-            <p className="sub" style={{ margin: 0 }}>Gestiona horarios base y turnos por dia.</p>
+    <section className="admin-board-page">
+      <div className="admin-board-shell">
+        <header className="games-heading admin-board-heading">
+          <div className="board-page-title admin-board-title">
+            <span className="title-icon">🎲</span>
+            <h1>Gestión de turnos</h1>
+            <span className="title-icon">🎲</span>
           </div>
-        </div>
-        <button className="btn ghost" onClick={fetchTurnos} disabled={loadingTurnos}>
-          {loadingTurnos ? "Actualizando..." : "Refrescar"}
-        </button>
-      </div>
+          <p>Gestiona horarios base y turnos por día.</p>
+        </header>
 
-      <div className="row" style={{ gap: 10, marginTop: 16, flexWrap: "wrap" }}>
+        <div className="admin-board-panel">
+          <div className="admin-board-toolbar">
+            <button className="admin-board-button ghost" onClick={() => setVista("menu")}>
+              <BackIcon />
+              Volver
+            </button>
+            <button className="admin-board-button ghost" onClick={fetchTurnos} disabled={loadingTurnos}>
+              <RefreshIcon />
+              {loadingTurnos ? "Actualizando..." : "Refrescar"}
+            </button>
+          </div>
+
+      <div className="admin-board-tabs">
         <button
-          className={`btn ${vistaTurnoTab === "horarios" ? "primary" : "ghost"}`}
+          className={`admin-board-tab ${vistaTurnoTab === "horarios" ? "is-active" : ""}`}
           type="button"
-          onClick={() => {
-            setVistaTurnoTab("horarios");
-            fetchTurnos();
-          }}
+          onClick={() => setVistaTurnoTab("horarios")}
         >
           Horarios base
         </button>
         <button
-          className={`btn ${vistaTurnoTab === "dias" ? "primary" : "ghost"}`}
+          className={`admin-board-tab ${vistaTurnoTab === "dias" ? "is-active" : ""}`}
           type="button"
-          onClick={() => {
-            setVistaTurnoTab("dias");
-            fetchTurnos();
-          }}
+          onClick={() => setVistaTurnoTab("dias")}
         >
           Turnos por dia
         </button>
@@ -1369,6 +1608,7 @@ export default function AdminPanel() {
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <button className="btn primary" type="submit" disabled={loadingTurnos}>
+                <PlusIcon />
                 {loadingTurnos ? "Creando..." : "Crear horario"}
               </button>
               <button
@@ -1376,6 +1616,7 @@ export default function AdminPanel() {
                 type="button"
                 onClick={() => setNuevoHorario({ horaInicio: "", horaFin: "" })}
               >
+                <BroomIcon />
                 Limpiar
               </button>
             </div>
@@ -1406,6 +1647,7 @@ export default function AdminPanel() {
                         onClick={() => handleEliminarTurno("horario", h.id)}
                         disabled={eliminandoTurnoId?.tipo === "horario" && eliminandoTurnoId.id === h.id}
                       >
+                        <TrashIcon />
                         {eliminandoTurnoId?.tipo === "horario" && eliminandoTurnoId.id === h.id ? "Eliminando..." : "Eliminar"}
                       </button>
                     </td>
@@ -1474,13 +1716,15 @@ export default function AdminPanel() {
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <button className="btn primary" type="submit" disabled={loadingTurnos}>
-                {loadingTurnos ? "Creando..." : "Crear turno dia"}
+                <PlusIcon />
+                {loadingTurnos ? "Creando..." : "Crear turno"}
               </button>
               <button
                 className="btn ghost"
                 type="button"
                 onClick={() => setNuevoTurnoDia({ fecha: "", diaSemana: "", turnoHorarioId: "" })}
               >
+                <BroomIcon />
                 Limpiar
               </button>
             </div>
@@ -1511,6 +1755,7 @@ export default function AdminPanel() {
             </div>
             <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
               <button className="btn primary" type="button" onClick={fetchTurnos} disabled={loadingTurnos}>
+                <FilterIcon />
                 {loadingTurnos ? "Buscando..." : "Aplicar filtros"}
               </button>
               <button
@@ -1521,6 +1766,7 @@ export default function AdminPanel() {
                   setTimeout(fetchTurnos, 0);
                 }}
               >
+                <BroomIcon />
                 Limpiar
               </button>
             </div>
@@ -1554,6 +1800,7 @@ export default function AdminPanel() {
                         onClick={() => handleEliminarTurno("dia", t.id)}
                         disabled={eliminandoTurnoId?.tipo === "dia" && eliminandoTurnoId.id === t.id}
                       >
+                        <TrashIcon />
                         {eliminandoTurnoId?.tipo === "dia" && eliminandoTurnoId.id === t.id ? "Eliminando..." : "Eliminar"}
                       </button>
                     </td>
@@ -1578,6 +1825,8 @@ export default function AdminPanel() {
           </div>
         </>
       )}
+        </div>
+      </div>
     </section>
   );
 }
