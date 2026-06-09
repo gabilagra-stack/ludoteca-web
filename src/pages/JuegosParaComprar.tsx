@@ -105,16 +105,6 @@ function getPaginationItems(currentPage: number, totalPages: number): Pagination
   return [1, "ellipsis", currentPage, "ellipsis", totalPages];
 }
 
-function getGameInitials(nombre: string) {
-  return nombre
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
-}
-
 function formatPrice(precio: number | null | undefined) {
   return precio != null ? priceFormatter.format(precio).replace(/\s/g, "") : "Consultar";
 }
@@ -294,10 +284,8 @@ export default function JuegosParaComprar() {
                 return (
                   <article key={juego.id} className="games-list-row games-buy-row game-row">
                     <div className="games-buy-main">
-                      {juego.imagenUrl ? (
+                      {juego.imagenUrl && (
                         <img className="games-cover" src={juego.imagenUrl} alt="" loading="lazy" />
-                      ) : (
-                        <span className="games-cover games-cover-fallback">{getGameInitials(juego.nombre)}</span>
                       )}
                       <div className="games-row-copy">
                         <strong>{juego.nombre}</strong>

@@ -49,13 +49,16 @@ export default function Layout() {
                 Salir
               </button>
             </div>
+          ) : isLogin ? (
+            <span className="nav-btn-login nav-btn-login-placeholder" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Iniciar sesion
+            </span>
           ) : (
-            !isLogin && (
-              <NavLink to="/login" className={({ isActive }) => "nav-btn-login " + (isActive ? "active" : "")}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Iniciar sesión
-              </NavLink>
-            )
+            <NavLink to="/login" className={({ isActive }) => "nav-btn-login " + (isActive ? "active" : "")}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Iniciar sesion
+            </NavLink>
           )}
         </div>
       </header>
