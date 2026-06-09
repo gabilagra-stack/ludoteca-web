@@ -16,6 +16,10 @@
   --board-dark: #222;
   --board-darker: #111;
   --board-border: #333;
+  --app-bg-image: url("/imagen_fondo.png");
+  --app-bg-layers:
+    linear-gradient(rgba(5,5,5,.22), rgba(5,5,5,.42)),
+    var(--app-bg-image);
 }
 
 *{ box-sizing: border-box; }
@@ -25,7 +29,23 @@ body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
   color:var(--text);
-  background:linear-gradient(180deg, #0a1020 0%, #0c1324 100%);
+  background:var(--app-bg-layers);
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
+}
+
+.games-page,
+.reservation-page,
+.my-reservations-page,
+.admin-menu-page,
+.admin-users-page,
+.admin-mesas-page,
+.admin-board-page{
+  background:var(--app-bg-layers) !important;
+  background-size:cover !important;
+  background-position:center !important;
+  background-attachment:fixed !important;
 }
 
 /* Layout */
@@ -496,6 +516,10 @@ input[type="date"]::-moz-calendar-picker-indicator{
   transform: translateY(-2px);
   box-shadow: 4px 4px 0 var(--board-darker);
   background: #ffdc5f;
+}
+.nav.nav-home .nav-btn-login-placeholder{
+  visibility:hidden;
+  pointer-events:none;
 }
 .nav.nav-home .nav-btn-logout {
   background:#101010;
@@ -1231,16 +1255,41 @@ input[type="date"]::-moz-calendar-picker-indicator{
 }
 .admin-menu-row{
   display:grid;
-  grid-template-columns:58px minmax(0, 1fr) 96px;
+  grid-template-columns:58px minmax(0, 1fr) 28px;
   align-items:center;
   gap:14px;
+  width:100%;
   min-height:66px;
   padding:8px 18px 8px 10px;
+  color:inherit;
   background:linear-gradient(180deg, rgba(27,27,27,.95), rgba(16,16,16,.96));
   border:1px solid rgba(120,144,168,.22);
   border-radius:10px;
   box-shadow:
     0 10px 22px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  cursor:pointer;
+  text-align:left;
+  transition:
+    transform .15s ease,
+    border-color .15s ease,
+    background .15s ease,
+    box-shadow .15s ease;
+}
+.admin-menu-row:hover,
+.admin-menu-row:focus-visible{
+  transform:translateY(-1px);
+  border-color:rgba(250,204,21,.45);
+  background:linear-gradient(180deg, #1d1d1d 0%, #121212 100%);
+  box-shadow:
+    0 12px 26px rgba(0,0,0,.36),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  outline:none;
+}
+.admin-menu-row:focus-visible{
+  box-shadow:
+    0 12px 26px rgba(0,0,0,.36),
+    0 0 0 2px rgba(255,195,33,.22),
     inset 0 1px 0 rgba(255,255,255,.06);
 }
 .admin-menu-icon{
@@ -1272,24 +1321,19 @@ input[type="date"]::-moz-calendar-picker-indicator{
   color:#d3d3d3;
   font-size:13px;
 }
-.admin-menu-action{
-  min-height:40px;
-  padding:0 20px;
-  color:#111;
-  background:
-    linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px),
-    linear-gradient(180deg, #ffd34f, #e4a20e);
-  background-size:10px 10px, 10px 10px, auto;
-  border:3px solid #111;
-  border-radius:9px;
-  box-shadow:3px 3px 0 rgba(17,17,17,.9);
-  cursor:pointer;
-  font-size:15px;
+.admin-menu-arrow{
+  justify-self:end;
+  color:#ffc321;
+  font-size:28px;
   font-weight:900;
+  line-height:1;
+  opacity:.78;
+  transition:transform .15s ease, opacity .15s ease;
 }
-.admin-menu-action:hover{
-  transform:translateY(-1px);
+.admin-menu-row:hover .admin-menu-arrow,
+.admin-menu-row:focus-visible .admin-menu-arrow{
+  opacity:1;
+  transform:translateX(2px);
 }
 
 /* Gestion de usuarios */
@@ -2177,7 +2221,7 @@ input[type="date"]::-moz-calendar-picker-indicator{
     border-radius:14px;
   }
   .admin-menu-row{
-    grid-template-columns:48px minmax(0, 1fr);
+    grid-template-columns:48px minmax(0, 1fr) 22px;
     padding:10px;
   }
   .admin-menu-icon{
@@ -2188,9 +2232,8 @@ input[type="date"]::-moz-calendar-picker-indicator{
     width:28px;
     height:28px;
   }
-  .admin-menu-action{
-    grid-column:2 / -1;
-    width:100%;
+  .admin-menu-arrow{
+    font-size:24px;
   }
   .admin-users-page{
     padding:18px 14px 38px;

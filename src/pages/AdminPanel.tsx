@@ -696,7 +696,12 @@ export default function AdminPanel() {
 
           <div className="admin-menu-panel">
             {adminMenuItems.map((item) => (
-              <article key={item.vista} className="admin-menu-row">
+              <button
+                key={item.vista}
+                type="button"
+                className="admin-menu-row"
+                onClick={() => setVista(item.vista)}
+              >
                 <span className="admin-menu-icon">
                   <AdminMenuIcon type={item.icon} />
                 </span>
@@ -704,10 +709,8 @@ export default function AdminPanel() {
                   <strong>{item.title}</strong>
                   <span>{item.description}</span>
                 </div>
-                <button className="admin-menu-action" onClick={() => setVista(item.vista)}>
-                  Abrir
-                </button>
-              </article>
+                <span className="admin-menu-arrow" aria-hidden="true">›</span>
+              </button>
             ))}
           </div>
         </div>
