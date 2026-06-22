@@ -24,17 +24,18 @@ import {
   type JuegoParaVender,
 } from "../api/juegos.api";
 import { parseApiError } from "../api/api-error";
+import { crearEvento, eliminarEvento, listarTodosEventos, type Evento } from "../api/eventos.api";
 
 type FiltrosUsuarios = { nombre: string; email: string; rol: string };
 type FiltrosMesas = { numero: string; capacidad: string };
-type Vista = "menu" | "usuarios" | "mesas" | "turnos" | "juegos" | "reservas";
+type Vista = "menu" | "usuarios" | "mesas" | "turnos" | "juegos" | "reservas" | "eventos";
 type PaginationItem = number | "ellipsis";
 
 type AdminMenuItem = {
   vista: Exclude<Vista, "menu">;
   title: string;
   description: string;
-  icon: "usuarios" | "mesas" | "turnos" | "juegos" | "reservas";
+  icon: "usuarios" | "mesas" | "turnos" | "juegos" | "reservas" | "eventos";
 };
 
 const adminMenuItems: AdminMenuItem[] = [
@@ -42,6 +43,7 @@ const adminMenuItems: AdminMenuItem[] = [
   { vista: "mesas", title: "Mesas", description: "Configurar mesas y capacidad.", icon: "mesas" },
   { vista: "turnos", title: "Turnos", description: "Horarios y turnos por fecha.", icon: "turnos" },
   { vista: "juegos", title: "Juegos", description: "Catalogo para jugar y vender.", icon: "juegos" },
+  { vista: "eventos", title: "Eventos", description: "Alta y baja de proximos eventos.", icon: "eventos" },
   { vista: "reservas", title: "Reservas", description: "Consultar y cancelar reservas.", icon: "reservas" },
 ];
 
@@ -87,6 +89,18 @@ function AdminMenuIcon({ type }: { type: AdminMenuItem["icon"] }) {
         <circle cx="12" cy="12" r="1.2" fill="#111" />
         <circle cx="8.5" cy="15.5" r="1.2" fill="#111" />
         <circle cx="15.5" cy="15.5" r="1.2" fill="#111" />
+      </svg>
+    );
+  }
+
+  if (type === "eventos") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M8 2v4" />
+        <path d="M16 2v4" />
+        <rect width="18" height="18" x="3" y="4" rx="2" />
+        <path d="M3 10h18" />
+        <path d="m9 16 2 2 4-5" />
       </svg>
     );
   }
@@ -342,6 +356,13 @@ export default function AdminPanel() {
   });
   const [eliminandoReserva, setEliminandoReserva] = useState<number | null>(null);
 
+  // Eventos
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [loadingEventos, setLoadingEventos] = useState(false);
+  const [errorEventos, setErrorEventos] = useState<string | null>(null);
+  const [nuevoEvento, setNuevoEvento] = useState({ titulo: "", fecha: "", descripcion: "", url: "" });
+  const [eliminandoEvento, setEliminandoEvento] = useState<number | null>(null);
+
   async function fetchUsuarios() {
     setLoadingUsuarios(true);
     setErrorUsuarios(null);
@@ -418,6 +439,20 @@ export default function AdminPanel() {
     }
   }
 
+  async function fetchEventos() {
+    setLoadingEventos(true);
+    setErrorEventos(null);
+    try {
+      const data = await listarTodosEventos();
+      setEventos(data);
+    } catch (e) {
+      const { message } = parseApiError(e, "No se pudieron cargar los eventos");
+      setErrorEventos(message);
+    } finally {
+      setLoadingEventos(false);
+    }
+  }
+
   async function fetchJuegos() {
     setLoadingJuegos(true);
     setErrorJuegos(null);
@@ -454,6 +489,7 @@ export default function AdminPanel() {
     if (vista === "turnos") fetchTurnos();
     if (vista === "juegos") fetchJuegos();
     if (vista === "reservas") fetchReservas();
+    if (vista === "eventos") fetchEventos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vista]);
 
@@ -620,6 +656,43 @@ export default function AdminPanel() {
       setErrorReservas(message);
     } finally {
       setEliminandoReserva(null);
+    }
+  }
+
+  async function handleCrearEvento(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorEventos(null);
+    setLoadingEventos(true);
+    try {
+      const creado = await crearEvento({
+        titulo: nuevoEvento.titulo,
+        fecha: nuevoEvento.fecha,
+        descripcion: nuevoEvento.descripcion,
+        url: nuevoEvento.url,
+      });
+      setNuevoEvento({ titulo: "", fecha: "", descripcion: "", url: "" });
+      setEventos((prev) => [creado, ...prev].sort((a, b) => a.fecha.localeCompare(b.fecha)));
+    } catch (err) {
+      const { message } = parseApiError(err, "No se pudo crear el evento");
+      setErrorEventos(message);
+    } finally {
+      setLoadingEventos(false);
+    }
+  }
+
+  async function handleEliminarEvento(id: number) {
+    const confirmar = window.confirm("Eliminar evento? Esta accion no se puede deshacer.");
+    if (!confirmar) return;
+    setEliminandoEvento(id);
+    setErrorEventos(null);
+    try {
+      await eliminarEvento(id);
+      setEventos((prev) => prev.filter((evento) => evento.id !== id));
+    } catch (err) {
+      const { message } = parseApiError(err, "No se pudo eliminar el evento");
+      setErrorEventos(message);
+    } finally {
+      setEliminandoEvento(null);
     }
   }
 
@@ -1410,6 +1483,127 @@ export default function AdminPanel() {
             </div>
           </>
         )}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (vista === "eventos") {
+    return (
+      <section className="admin-board-page">
+        <div className="admin-board-shell">
+          <header className="games-heading admin-board-heading">
+            <div className="board-page-title admin-board-title">
+              <span className="title-icon">🎲</span>
+              <h1>Gestión de eventos</h1>
+              <span className="title-icon">🎲</span>
+            </div>
+            <p>Crear y eliminar eventos publicados en el home.</p>
+          </header>
+
+          <div className="admin-board-panel">
+            <div className="admin-board-toolbar">
+              <button className="admin-board-button ghost" onClick={() => setVista("menu")}>
+                <BackIcon />
+                Volver
+              </button>
+              <button className="admin-board-button ghost" onClick={fetchEventos} disabled={loadingEventos}>
+                <RefreshIcon />
+                {loadingEventos ? "Actualizando..." : "Refrescar"}
+              </button>
+            </div>
+
+            <div className="card" style={{ background: "rgba(17,26,46,.6)", border: "1px solid var(--border)", marginTop: 16, boxShadow: "0 10px 30px rgba(0,0,0,.25)" }}>
+              <form onSubmit={handleCrearEvento} className="row admin-events-form" style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
+                <div style={{ flex: 1, minWidth: 180 }}>
+                  <label className="label">Titulo</label>
+                  <input
+                    className="input"
+                    value={nuevoEvento.titulo}
+                    onChange={(e) => setNuevoEvento((evento) => ({ ...evento, titulo: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div style={{ flex: 1, minWidth: 150 }}>
+                  <label className="label">Fecha</label>
+                  <input
+                    className="input"
+                    type="date"
+                    value={nuevoEvento.fecha}
+                    onChange={(e) => setNuevoEvento((evento) => ({ ...evento, fecha: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="admin-events-wide" style={{ flex: 1, minWidth: 220 }}>
+                  <label className="label">Descripción</label>
+                  <input
+                    className="input"
+                    value={nuevoEvento.descripcion}
+                    onChange={(e) => setNuevoEvento((evento) => ({ ...evento, descripcion: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="admin-events-wide" style={{ flex: 1, minWidth: 220 }}>
+                  <label className="label">URL</label>
+                  <input
+                    className="input"
+                    type="url"
+                    value={nuevoEvento.url}
+                    onChange={(e) => setNuevoEvento((evento) => ({ ...evento, url: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button className="btn primary" type="submit" disabled={loadingEventos}>
+                    <PlusIcon />
+                    {loadingEventos ? "Creando..." : "Crear evento"}
+                  </button>
+                  <button
+                    className="btn ghost"
+                    type="button"
+                    onClick={() => setNuevoEvento({ titulo: "", fecha: "", descripcion: "", url: "" })}
+                  >
+                    <BroomIcon />
+                    Limpiar
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {errorEventos && <div className="alert error" style={{ marginTop: 12 }}>{errorEventos}</div>}
+
+            <div className="card" style={{ marginTop: 12, background: "rgba(17,26,46,.6)", border: "1px solid var(--border)", boxShadow: "0 10px 30px rgba(0,0,0,.25)" }}>
+              <div className="list">
+                {eventos.map((evento) => (
+                  <div key={evento.id} className="item" style={{ justifyContent: "space-between" }}>
+                    <div>
+                      <strong>{evento.titulo}</strong>
+                      <div className="hint">
+                        Fecha: {evento.fecha} · {evento.descripcion || "Sin descripcion"}
+                      </div>
+                      <div className="hint">
+                        <a href={evento.url} target="_blank" rel="noreferrer">{evento.url}</a>
+                      </div>
+                    </div>
+                    <button
+                      className="btn danger"
+                      onClick={() => handleEliminarEvento(evento.id)}
+                      disabled={eliminandoEvento === evento.id}
+                    >
+                      <TrashIcon />
+                      {eliminandoEvento === evento.id ? "Eliminando..." : "Eliminar"}
+                    </button>
+                  </div>
+                ))}
+                {!loadingEventos && eventos.length === 0 && (
+                  <div className="item"><span className="hint">Sin eventos cargados</span></div>
+                )}
+                {loadingEventos && (
+                  <div className="item"><span className="hint">Cargando...</span></div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>

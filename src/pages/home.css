@@ -281,6 +281,16 @@
   flex: 1;
 }
 
+.board-card-state {
+  grid-column: 1 / -1;
+  min-height: 150px;
+  justify-content: center;
+}
+
+.board-card .board-btn {
+  margin-top: auto;
+}
+
 /* Unified Happenings Card */
 .happenings-unified {
   background: linear-gradient(to bottom, #1f1f22, #121214);
