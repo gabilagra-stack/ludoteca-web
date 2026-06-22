@@ -1980,6 +1980,15 @@ input[type="date"]::-moz-calendar-picker-indicator{
   padding-bottom:18px;
   border-bottom:1px solid rgba(120,144,168,.22);
 }
+.admin-board-panel .admin-events-form{
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+}
+.admin-board-panel .admin-events-form > div{
+  min-width:0 !important;
+}
+.admin-board-panel .admin-events-form .admin-events-wide{
+  grid-column:1 / -1;
+}
 .admin-board-panel .label{
   display:block;
   margin-bottom:8px;
